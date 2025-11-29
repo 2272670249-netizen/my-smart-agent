@@ -28,15 +28,17 @@
         header {
             background-color: #1a73e8;
             color: white;
-            padding: 15px 30px;
+            padding: 15px 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .logo-area {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .logo-area h1 {
@@ -52,6 +54,7 @@
         nav ul {
             display: flex;
             list-style: none;
+            flex-wrap: wrap;
         }
         
         nav li {
@@ -62,23 +65,25 @@
             color: white;
             text-decoration: none;
             font-size: 16px;
+            transition: opacity 0.3s;
         }
         
         nav a:hover {
-            text-decoration: underline;
+            opacity: 0.8;
         }
         
         /* 主内容区 */
         .main-content {
             display: flex;
             flex: 1;
-            padding: 20px;
+            padding: 20px 5%;
+            gap: 20px;
         }
         
         /* 左侧信息栏 */
         .info-panel {
-            width: 30%;
-            padding-right: 20px;
+            width: 35%;
+            min-width: 300px;
         }
         
         .panel-section {
@@ -115,11 +120,13 @@
         
         /* 右侧内容区 */
         .content-area {
-            width: 70%;
+            flex: 1;
             background: white;
             border-radius: 8px;
             padding: 30px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
         }
         
         .welcome-section {
@@ -152,6 +159,7 @@
             text-align: center;
             padding: 20px;
             color: #666;
+            margin-top: auto;
         }
         
         .highlight {
@@ -196,7 +204,7 @@
             text-decoration: none;
         }
 
-        /* 添加移动端提示样式 */
+        /* 移动端提示样式 */
         .mobile-tips {
             display: none;
             background: #fff8e1;
@@ -221,6 +229,89 @@
         #status {
             font-weight: bold;
             color: #1a73e8;
+        }
+        
+        /* 新增功能卡片区域 */
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .info-panel {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            
+            .panel-section {
+                flex: 1;
+                min-width: 300px;
+            }
+            
+            .content-area {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                padding: 15px 20px;
+            }
+            
+            .logo-area {
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            
+            nav ul {
+                justify-content: center;
+            }
+            
+            nav li {
+                margin: 0 10px;
+            }
+            
+            .main-content {
+                padding: 15px 20px;
+            }
+            
+            .panel-section {
+                min-width: 100%;
+            }
+            
+            .feature-cards {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -284,7 +375,26 @@
                     <p>点击右下角按钮与启智导师智能体对话，获取个性化评价和建议。</p>
                 </div>
                 
-                <!-- 添加移动端提示 -->
+                <!-- 新增功能卡片区域 -->
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>智能评价</h3>
+                        <p>基于课程标准的多维度评价体系，全面分析学生能力</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>个性化建议</h3>
+                        <p>针对学生特点提供定制化学习路径和改进建议</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>成长追踪</h3>
+                        <p>记录学生进步轨迹，可视化展示学习成果</p>
+                    </div>
+                </div>
+                
+                <!-- 移动端提示 -->
                 <div id="mobileTips" class="mobile-tips">
                     💡 移动端访问提示：如果按钮不显示，请尝试刷新页面或上下滑动
                 </div>
