@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的AI智能助手</title>
+    <title>启智导师 - 评价智能体</title>
     <style>
         * {
             margin: 0;
@@ -88,129 +88,92 @@
         .btn-secondary {
             background: #95a5a6;
         }
-        .loading-dots {
-            display: inline-block;
-        }
-        .loading-dots:after {
-            content: '...';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-        @keyframes dots {
-            0%, 20% { content: ''; }
-            40% { content: '.'; }
-            60% { content: '..'; }
-            80%, 100% { content: '...'; }
-        }
         .hidden {
             display: none;
+        }
+        .coze-widget-container {
+            width: 100%;
+            height: 600px;
+            border: none;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="robot-icon">🤖</div>
-        <h1>我的AI智能助手</h1>
+        <h1>启智导师 - 评价智能体</h1>
         <p class="subtitle">基于Coze平台的智能对话助手</p>
         
         <div id="statusBox" class="status-box status-loading">
-            <div id="statusMessage">正在检测运行环境<span class="loading-dots"></span></div>
+            <div id="statusMessage">正在初始化智能体...</div>
             <div id="statusDetail" style="margin-top: 10px; font-size: 14px; color: #7f8c8d;"></div>
         </div>
 
         <div id="actionButtons">
-            <button id="retryBtn" class="btn" onclick="retryLoad()">重新加载</button>
+            <button class="btn" onclick="retryLoad()">重新加载</button>
             <button class="btn btn-secondary" onclick="window.location.reload()">刷新页面</button>
         </div>
 
         <div id="successSection" class="hidden">
             <div class="status-box status-success">
-                <div style="font-size: 18px; margin-bottom: 10px;">✅ 智能助手已就绪！</div>
-                <div>请点击右下角蓝色图标开始对话</div>
+                <div style="font-size: 18px; margin-bottom: 10px;">✅ 智能体已就绪！</div>
+                <div>请点击右下角图标开始对话</div>
             </div>
         </div>
     </div>
 
-    <!-- 使用多个备用SDK源，确保至少一个可用 -->
+    <!-- 使用您提供的可用SDK -->
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
+    
     <script>
-        // SDK源列表（按优先级排序）
-        const SDK_SOURCES = [
-            'https://cdn.jsdelivr.net/npm/@coze/web-sdk@1.1.0/dist/coze-sdk.min.js',
-            'https://unpkg.com/@coze/web-sdk@1.1.0/dist/coze-sdk.min.js',
-            'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js',
-            'https://cdn.staticfile.org/coze-web-sdk/1.1.0/coze-sdk.min.js'
-        ];
-
-        let currentSourceIndex = 0;
-        let loadTimeout;
+        let sdkLoaded = false;
+        let cozeClient = null;
 
         function updateStatus(message, detail = '', type = 'loading') {
-            document.getElementById('statusMessage').innerHTML = message;
+            document.getElementById('statusMessage').textContent = message;
             document.getElementById('statusDetail').textContent = detail;
             document.getElementById('statusBox').className = `status-box status-${type}`;
         }
 
-        function loadSDK() {
-            if (currentSourceIndex >= SDK_SOURCES.length) {
-                updateStatus(
-                    '❌ 所有SDK源均加载失败', 
-                    '请检查网络连接或稍后重试', 
-                    'error'
-                );
-                return;
-            }
-
-            const source = SDK_SOURCES[currentSourceIndex];
-            updateStatus(
-                `正在从源 ${currentSourceIndex + 1} 加载SDK<span class="loading-dots"></span>`, 
-                `源: ${source}`,
-                'loading'
-            );
-
-            // 设置加载超时（8秒）
-            loadTimeout = setTimeout(() => {
-                currentSourceIndex++;
-                updateStatus('⏳ 当前源加载超时，尝试下一个源...');
-                setTimeout(loadSDK, 500);
-            }, 8000);
-
-            const script = document.createElement('script');
-            script.src = source;
+        function checkSDKLoad() {
+            const maxWaitTime = 10000; // 10秒超时
+            const startTime = Date.now();
             
-            script.onload = () => {
-                clearTimeout(loadTimeout);
-                updateStatus('✅ SDK加载成功', '正在初始化智能助手...');
-                setTimeout(initializeBot, 100);
-            };
-            
-            script.onerror = () => {
-                clearTimeout(loadTimeout);
-                currentSourceIndex++;
-                updateStatus('⚠️ 当前源加载失败，尝试下一个源...');
-                setTimeout(loadSDK, 500);
-            };
-            
-            document.head.appendChild(script);
+            const checkInterval = setInterval(() => {
+                if (typeof CozeWebSDK !== 'undefined') {
+                    clearInterval(checkInterval);
+                    sdkLoaded = true;
+                    updateStatus('SDK加载成功', '正在配置智能体...', 'success');
+                    setTimeout(initializeCozeBot, 500);
+                } else if (Date.now() - startTime > maxWaitTime) {
+                    clearInterval(checkInterval);
+                    updateStatus('SDK加载超时', '请检查网络连接', 'error');
+                }
+            }, 100);
         }
 
-        function initializeBot() {
-            if (typeof CozeWebSDK === 'undefined') {
-                updateStatus('❌ SDK对象未定义', '请尝试重新加载', 'error');
+        function initializeCozeBot() {
+            if (!sdkLoaded) {
+                updateStatus('SDK未就绪', '请重新加载', 'error');
                 return;
             }
 
             try {
-                // 使用正确的初始化方式
-                const botConfig = {
+                // 使用您提供的配置，但修正了语法错误
+                const token = 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'; // 请替换为您的真实token
+                
+                cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
-                        bot_id: '7578063729297145899'  // 🔴 替换为您的真实智能体ID
+                        bot_id: '7578063729297145899',
                     },
                     auth: {
                         type: 'token',
-                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'  // 🔴 替换为您的真实访问令牌
+                        token: token
                     },
                     userInfo: {
                         id: 'user_' + Math.random().toString(36).substr(2, 9),
-                        nickname: '智能助手用户'
+                        nickname: '启智导师用户'
                     },
                     ui: {
                         asstBtn: {
@@ -218,40 +181,60 @@
                             color: '#667eea'
                         },
                         chatBot: {
-                            title: '我的AI助手',
-                            welcome: '您好！请问有什么可以帮您？'
+                            title: '启智导师 - 评价智能体',
+                            welcome: '您好！我是启智导师，很高兴为您提供学习评价和指导。'
                         }
                     }
-                };
+                });
 
-                // 初始化智能体
-                new CozeWebSDK.WebChatClient(botConfig);
-                
                 // 显示成功界面
                 document.getElementById('successSection').classList.remove('hidden');
                 document.getElementById('statusBox').classList.add('hidden');
                 document.getElementById('actionButtons').classList.add('hidden');
                 
+                updateStatus('智能体初始化完成', '可以开始使用了', 'success');
+                
             } catch (error) {
                 updateStatus(
-                    '❌ 智能体初始化失败', 
+                    '智能体初始化失败', 
                     `错误: ${error.message}`, 
                     'error'
                 );
-                console.error('初始化错误:', error);
+                console.error('初始化错误详情:', error);
             }
         }
 
         function retryLoad() {
-            currentSourceIndex = 0;
             document.getElementById('successSection').classList.add('hidden');
             document.getElementById('statusBox').classList.remove('hidden');
             document.getElementById('actionButtons').classList.remove('hidden');
-            loadSDK();
+            updateStatus('重新加载中...', '', 'loading');
+            setTimeout(() => {
+                if (sdkLoaded) {
+                    initializeCozeBot();
+                } else {
+                    checkSDKLoad();
+                }
+            }, 500);
         }
 
-        // 页面加载完成后开始加载SDK
-        document.addEventListener('DOMContentLoaded', loadSDK);
+        // 页面加载完成后开始检测SDK
+        document.addEventListener('DOMContentLoaded', function() {
+            // 先检查SDK是否已经加载（可能缓存了）
+            if (typeof CozeWebSDK !== 'undefined') {
+                sdkLoaded = true;
+                updateStatus('SDK已就绪', '正在初始化智能体...', 'success');
+                setTimeout(initializeCozeBot, 500);
+            } else {
+                checkSDKLoad();
+            }
+        });
+
+        // 添加错误监听
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.error);
+            updateStatus('发生错误', e.message, 'error');
+        });
     </script>
 </body>
 </html>
