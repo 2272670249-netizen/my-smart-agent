@@ -6,7 +6,7 @@
     <title>启智导师 - 信息科技学业评价智能体</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 原有的CSS样式保持不变 */
+        /* 保持原有CSS样式不变 */
         :root {
             --primary-color: #4361ee;
             --primary-light: #e6ebff;
@@ -557,10 +557,35 @@
         </footer>
     </div>
 
-    <!-- 引入Coze SDK - 使用更稳定的版本 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0/libs/cn/index.js"></script>
-    
+    <!-- 修复SDK引入方式 -->
     <script>
+        // 全局常量定义
+        const BOT_ID = '7558025828223778835';
+        const TOKEN = 'pat_fjyGEnuRL7x64YqmjkgeKbkDCuj6fHbqu1cvUuCA8opW7C02QJaMUI3EpnhBb0bX';
+        
+        // 动态加载Coze SDK
+        function loadCozeSDK() {
+            return new Promise((resolve, reject) => {
+                // 检查是否已加载
+                if (window.CozeWebSDK) {
+                    resolve(window.CozeWebSDK);
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0/libs/cn/index.js';
+                script.onload = () => {
+                    if (window.CozeWebSDK) {
+                        resolve(window.CozeWebSDK);
+                    } else {
+                        reject(new Error('CozeWebSDK加载后未定义'));
+                    }
+                };
+                script.onerror = () => reject(new Error('Coze SDK加载失败'));
+                document.head.appendChild(script);
+            });
+        }
+        
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 开始对话按钮点击事件
@@ -603,56 +628,44 @@
             });
         });
 
-        function initCozeWidget() {
+        async function initCozeWidget() {
             try {
                 console.log('开始初始化Coze智能体...');
                 
-                // 使用正确的token和bot_id
-                const token = 'pat_fjyGEnuRL7x64YqmjkgeKbkDCuj6fHbqu1cvUuCA8opW7C02QJaMUI3EpnhBb0bX';
-                const botId = '7558025828223778835';
-                
-                if (!token || !botId) {
+                if (!TOKEN || !BOT_ID) {
                     throw new Error('Token或Bot ID未配置');
                 }
                 
-                // 创建Coze客户端 - 修正配置
+                // 确保SDK已加载
+                const CozeWebSDK = await loadCozeSDK();
+                console.log('Coze SDK加载成功');
+                
+                // 创建Coze客户端
                 const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
-                        bot_id: botId,
-                        // 添加嵌入模式配置
+                        bot_id: BOT_ID,
                         embedded: true,
-                        // 禁用浮动按钮
                         showFloatingButton: false
                     },
                     componentProps: {
                         title: '启智导师 - 评价智能体',
-                        // 配置为嵌入模式
-                        mode: 'embedded',
-                        // 设置容器样式
-                        style: {
-                            width: '100%',
-                            height: '100%',
-                            border: 'none',
-                            borderRadius: '0 0 12px 12px'
-                        }
+                        mode: 'embedded'
                     },
                     auth: {
                         type: 'token',
-                        token: token
+                        token: TOKEN
                     }
                 });
 
-                // 检查是否成功创建客户端
-                if (!cozeClient) {
-                    throw new Error('无法创建Coze客户端');
-                }
-                
                 const widgetContainer = document.getElementById('coze-widget');
                 if (widgetContainer) {
                     // 隐藏错误消息
                     document.getElementById('error-message').style.display = 'none';
                     
-                    // 使用render方法正确渲染
+                    // 清空容器
+                    widgetContainer.innerHTML = '';
+                    
+                    // 渲染智能体
                     cozeClient.render(widgetContainer);
                     
                     // 显示容器
@@ -666,7 +679,7 @@
                 console.error('加载Coze智能体时出错:', error);
                 showErrorMessage(error.message);
                 
-                // 尝试备用方案：使用iframe嵌入
+                // 尝试备用方案
                 tryFallbackEmbedding();
             }
         }
@@ -678,9 +691,12 @@
             const widgetContainer = document.getElementById('coze-widget');
             if (!widgetContainer) return;
             
+            // 清空容器
+            widgetContainer.innerHTML = '';
+            
             // 创建iframe直接嵌入
             const iframe = document.createElement('iframe');
-            iframe.src = `https://www.coze.cn/embed/${botId}`;
+            iframe.src = `https://www.coze.cn/embed/${BOT_ID}?access_token=${TOKEN}`;
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.border = 'none';
@@ -691,10 +707,12 @@
             widgetContainer.style.display = 'block';
             
             console.log('已使用iframe备用方案嵌入智能体');
+            document.getElementById('statusText').textContent = '智能体已就绪 (备用模式)';
         }
         
         function showErrorMessage(errorMsg) {
             document.getElementById('chat-initial-state').style.display = 'none';
+            document.getElementById('coze-widget').style.display = 'none';
             document.getElementById('error-message').style.display = 'flex';
             document.getElementById('error-details').textContent = '错误详情: ' + errorMsg;
             document.getElementById('statusText').textContent = '智能体加载失败';
