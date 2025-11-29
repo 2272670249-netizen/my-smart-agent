@@ -15,6 +15,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -64,38 +65,33 @@
             border-left-color: #e74c3c;
             background: #fdedec;
         }
-        .status-loading {
-            border-left-color: #3498db;
-            background: #ebf5fb;
-        }
-        .btn {
+        .chat-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 12px 30px;
+            padding: 15px 40px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 16px;
-            margin: 5px;
+            font-size: 18px;
+            margin: 20px 0;
             transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
         }
-        .btn:hover {
+        .chat-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        .btn-secondary {
-            background: #95a5a6;
         }
         .hidden {
             display: none;
         }
-        .coze-widget-container {
-            width: 100%;
-            height: 600px;
-            border: none;
-            margin-top: 20px;
+        /* 强制显示悬浮按钮的样式 */
+        .coze-asst-btn {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 10000 !important;
         }
     </style>
 </head>
@@ -105,21 +101,17 @@
         <h1>启智导师 - 评价智能体</h1>
         <p class="subtitle">基于Coze平台的智能对话助手</p>
         
-        <div id="statusBox" class="status-box status-loading">
-            <div id="statusMessage">正在初始化智能体...</div>
-            <div id="statusDetail" style="margin-top: 10px; font-size: 14px; color: #7f8c8d;"></div>
+        <div id="statusBox" class="status-box status-success">
+            <div style="font-size: 18px; margin-bottom: 10px;">✅ 智能体已就绪！</div>
+            <div>请点击下方按钮开始对话</div>
         </div>
 
-        <div id="actionButtons">
-            <button class="btn" onclick="retryLoad()">重新加载</button>
-            <button class="btn btn-secondary" onclick="window.location.reload()">刷新页面</button>
-        </div>
+        <button id="startChatBtn" class="chat-btn">
+            <span>💬 开始对话</span>
+        </button>
 
-        <div id="successSection" class="hidden">
-            <div class="status-box status-success">
-                <div style="font-size: 18px; margin-bottom: 10px;">✅ 智能体已就绪！</div>
-                <div>请点击右下角图标开始对话</div>
-            </div>
+        <div style="margin-top: 20px; font-size: 14px; color: #7f8c8d;">
+            <p>如果右下角没有显示图标，请点击上方按钮</p>
         </div>
     </div>
 
@@ -127,40 +119,11 @@
     <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
     
     <script>
-        let sdkLoaded = false;
         let cozeClient = null;
-
-        function updateStatus(message, detail = '', type = 'loading') {
-            document.getElementById('statusMessage').textContent = message;
-            document.getElementById('statusDetail').textContent = detail;
-            document.getElementById('statusBox').className = `status-box status-${type}`;
-        }
-
-        function checkSDKLoad() {
-            const maxWaitTime = 10000; // 10秒超时
-            const startTime = Date.now();
-            
-            const checkInterval = setInterval(() => {
-                if (typeof CozeWebSDK !== 'undefined') {
-                    clearInterval(checkInterval);
-                    sdkLoaded = true;
-                    updateStatus('SDK加载成功', '正在配置智能体...', 'success');
-                    setTimeout(initializeCozeBot, 500);
-                } else if (Date.now() - startTime > maxWaitTime) {
-                    clearInterval(checkInterval);
-                    updateStatus('SDK加载超时', '请检查网络连接', 'error');
-                }
-            }, 100);
-        }
+        let chatStarted = false;
 
         function initializeCozeBot() {
-            if (!sdkLoaded) {
-                updateStatus('SDK未就绪', '请重新加载', 'error');
-                return;
-            }
-
             try {
-                // 使用您提供的配置，但修正了语法错误
                 const token = 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'; // 请替换为您的真实token
                 
                 cozeClient = new CozeWebSDK.WebChatClient({
@@ -178,62 +141,104 @@
                     ui: {
                         asstBtn: {
                             isNeed: true,
-                            color: '#667eea'
+                            color: '#667eea',
+                            size: 'large'
                         },
                         chatBot: {
                             title: '启智导师 - 评价智能体',
-                            welcome: '您好！我是启智导师，很高兴为您提供学习评价和指导。'
+                            welcome: '您好！我是启智导师，很高兴为您提供学习评价和指导。请告诉我您需要评价的内容吧！',
+                            style: {
+                                primaryColor: '#667eea'
+                            }
                         }
                     }
                 });
 
-                // 显示成功界面
-                document.getElementById('successSection').classList.remove('hidden');
-                document.getElementById('statusBox').classList.add('hidden');
-                document.getElementById('actionButtons').classList.add('hidden');
+                console.log('Coze智能体初始化成功');
                 
-                updateStatus('智能体初始化完成', '可以开始使用了', 'success');
-                
+                // 强制显示悬浮按钮（如果存在但被隐藏）
+                setTimeout(() => {
+                    const asstBtn = document.querySelector('.coze-asst-btn, [class*="asst-btn"], [class*="assistant"]');
+                    if (asstBtn) {
+                        asstBtn.style.display = 'block';
+                        asstBtn.style.opacity = '1';
+                        asstBtn.style.visibility = 'visible';
+                    }
+                }, 1000);
+
             } catch (error) {
-                updateStatus(
-                    '智能体初始化失败', 
-                    `错误: ${error.message}`, 
-                    'error'
-                );
-                console.error('初始化错误详情:', error);
+                console.error('初始化错误:', error);
+                document.getElementById('statusBox').innerHTML = `
+                    <div style="color: #e74c3c;">
+                        <div style="font-size: 18px; margin-bottom: 10px;">❌ 初始化失败</div>
+                        <div>错误: ${error.message}</div>
+                    </div>
+                `;
             }
         }
 
-        function retryLoad() {
-            document.getElementById('successSection').classList.add('hidden');
-            document.getElementById('statusBox').classList.remove('hidden');
-            document.getElementById('actionButtons').classList.remove('hidden');
-            updateStatus('重新加载中...', '', 'loading');
-            setTimeout(() => {
-                if (sdkLoaded) {
-                    initializeCozeBot();
+        // 手动打开聊天窗口
+        function openChatWindow() {
+            if (!cozeClient) {
+                alert('智能体尚未初始化完成，请稍后重试');
+                return;
+            }
+
+            // 尝试通过编程方式打开聊天窗口
+            try {
+                // 方法1: 触发悬浮按钮的点击事件
+                const asstBtn = document.querySelector('.coze-asst-btn, [class*="asst-btn"], [class*="assistant"]');
+                if (asstBtn) {
+                    asstBtn.click();
                 } else {
-                    checkSDKLoad();
+                    // 方法2: 如果悬浮按钮不存在，显示提示
+                    alert('聊天功能已就绪！如果右下角没有图标，请尝试：\n1. 刷新页面\n2. 检查浏览器控制台是否有错误\n3. 使用全屏模式');
+                    
+                    // 方法3: 尝试直接打开iframe
+                    openFullscreenChat();
                 }
-            }, 500);
+            } catch (error) {
+                console.error('打开聊天窗口失败:', error);
+                openFullscreenChat();
+            }
         }
 
-        // 页面加载完成后开始检测SDK
+        // 全屏聊天窗口备用方案
+        function openFullscreenChat() {
+            const chatHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000;">
+                    <div style="position: absolute; top: 10px; right: 10px;">
+                        <button onclick="document.getElementById('fullscreenChat').remove()" style="padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">关闭</button>
+                    </div>
+                    <iframe src="https://www.coze.cn/embed/7558025828223778835" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            `;
+            
+            const chatDiv = document.createElement('div');
+            chatDiv.id = 'fullscreenChat';
+            chatDiv.innerHTML = chatHTML;
+            document.body.appendChild(chatDiv);
+        }
+
+        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 先检查SDK是否已经加载（可能缓存了）
-            if (typeof CozeWebSDK !== 'undefined') {
-                sdkLoaded = true;
-                updateStatus('SDK已就绪', '正在初始化智能体...', 'success');
-                setTimeout(initializeCozeBot, 500);
-            } else {
-                checkSDKLoad();
-            }
+            // 初始化智能体
+            setTimeout(initializeCozeBot, 500);
+            
+            // 绑定开始对话按钮事件
+            document.getElementById('startChatBtn').addEventListener('click', openChatWindow);
+            
+            // 添加键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    openChatWindow();
+                }
+            });
         });
 
-        // 添加错误监听
+        // 全局错误处理
         window.addEventListener('error', function(e) {
             console.error('全局错误:', e.error);
-            updateStatus('发生错误', e.message, 'error');
         });
     </script>
 </body>
