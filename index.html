@@ -699,18 +699,21 @@
                 
                 // 创建Coze客户端 - 使用正确的配置
                 const cozeClient = new CozeWebSDK.WebChatClient({
-                    config: {
-                        bot_id: botId,
-                    },
-                    componentProps: {
-                        title: '启智导师 - 评价智能体',
-                        // 禁用浮动窗口，强制嵌入
-                        displayStyle: 'embedded'
-                    },
-                    auth: {
-                        type: 'token',
-                        token: token
+                config: {
+                    bot_id: botId,
+                },
+                componentProps: {
+                    title: '启智导师 - 评价智能体',
+                },
+                auth: {
+                    type: 'token',
+                    token: token,
+                    onRefreshToken: function() {
+                        // 实现token刷新逻辑
+                        console.log('Token刷新回调被调用');
+                        return token; // 返回当前token或获取新token
                     }
+                }
                 });
 
                 // 检查是否成功创建客户端
@@ -748,3 +751,4 @@
     </script>
 </body>
 </html>
+
