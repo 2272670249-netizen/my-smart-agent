@@ -49,170 +49,146 @@
         h1 {
             color: #2c3e50;
             margin-bottom: 15px;
-            font-size: 28px;
-        }
-        .icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 15px;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background: #5a6fd8;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">🤖</div>
+        <div style="font-size: 48px; margin-bottom: 20px;">🤖</div>
         <h1>我的AI智能助手</h1>
         <div id="status" class="status loading">
-            <p>正在启动智能助手服务...</p>
+            <p>正在检测SDK环境...</p>
         </div>
-        <button class="btn" onclick="window.location.reload()">刷新页面</button>
+        <button onclick="testSDK()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px;">测试SDK</button>
+        <button onclick="window.location.reload()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px;">刷新页面</button>
     </div>
 
+    <!-- 使用官方推荐的SDK加载方式 -->
+    <script src="https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js"></script>
+    
     <script>
-        // 智能体初始化函数
-        function initializeSmartAssistant() {
-            const statusEl = document.getElementById('status');
+        const statusEl = document.getElementById('status');
+        let sdkLoaded = false;
+
+        // 检测SDK加载状态
+        function checkSDKLoad() {
+            const maxWaitTime = 10000; // 10秒超时
+            const startTime = Date.now();
             
-            // 检查全局Coze对象是否可用（通过内联SDK）
+            const checkInterval = setInterval(() => {
+                if (typeof CozeWebSDK !== 'undefined') {
+                    clearInterval(checkInterval);
+                    sdkLoaded = true;
+                    statusEl.innerHTML = '<p>✅ SDK加载成功，准备初始化...</p>';
+                    statusEl.className = 'status success';
+                    initializeBot();
+                } else if (Date.now() - startTime > maxWaitTime) {
+                    clearInterval(checkInterval);
+                    statusEl.innerHTML = '<p>❌ SDK加载超时，请刷新重试</p>';
+                    statusEl.className = 'status error';
+                }
+            }, 100);
+        }
+
+        // 测试SDK对象
+        function testSDK() {
+            statusEl.innerHTML = '<p>正在检测SDK对象...</p>';
+            
             if (typeof CozeWebSDK === 'undefined') {
-                statusEl.innerHTML = `
-                    <p>SDK加载异常，尝试备用方案...</p>
-                `;
-                // 如果内联SDK也失败，尝试动态加载
-                loadFallbackSDK();
+                statusEl.innerHTML = '<p>❌ CozeWebSDK 未定义</p>';
+                return;
+            }
+            
+            let info = '<p>SDK对象检测结果:</p><ul style="text-align: left; font-size: 12px;">';
+            info += `<li>CozeWebSDK类型: ${typeof CozeWebSDK}</li>`;
+            
+            if (CozeWebSDK.WebChatClient) {
+                info += `<li>WebChatClient类型: ${typeof CozeWebSDK.WebChatClient}</li>`;
+                info += `<li>是否为构造函数: ${typeof CozeWebSDK.WebChatClient === 'function' ? '是' : '否'}</li>`;
+            } else {
+                info += '<li>❌ WebChatClient 不存在</li>';
+                // 检查可用的属性
+                info += '<li>可用属性: ' + Object.keys(CozeWebSDK).join(', ') + '</li>';
+            }
+            
+            info += '</ul>';
+            statusEl.innerHTML = info;
+        }
+
+        // 初始化智能体
+        function initializeBot() {
+            if (!sdkLoaded) {
+                statusEl.innerHTML = '<p>⚠️ SDK尚未加载完成，请稍后...</p>';
                 return;
             }
 
             try {
-                // 初始化Coze智能体 - 请替换下面的YOUR信息！
-                const botClient = new CozeWebSDK.WebChatClient({
-                    config: {
-                        bot_id: '7578063729297145899'  // 🔴 替换为您的真实智能体ID
-                    },
-                    auth: {
-                        type: 'token', 
-                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'  // 🔴 替换为您的真实访问令牌
-                    },
-                    userInfo: {
-                        id: 'user_' + Math.random().toString(36).substr(2, 9),
-                        nickname: '网站访客'
-                    },
-                    ui: {
-                        asstBtn: {
-                            isNeed: true,
-                            color: '#667eea',
-                            size: 'large'
+                statusEl.innerHTML = '<p>正在初始化智能体配置...</p>';
+                
+                // 方法1：尝试标准初始化
+                if (CozeWebSDK.WebChatClient && typeof CozeWebSDK.WebChatClient === 'function') {
+                    const botConfig = {
+                        config: {
+                            bot_id: '7578063729297145899'  // 🔴 替换为您的真实智能体ID
                         },
-                        chatBot: {
-                            title: 'AI智能助手',
-                            welcome: '您好！我是您的AI助手，很高兴为您服务。',
-                            style: {
-                                primaryColor: '#667eea'
-                            }
+                        auth: {
+                            type: 'token',
+                            token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'  // 🔴 替换为您的真实访问令牌
+                        },
+                        userInfo: {
+                            id: 'user_' + Math.random().toString(36).substr(2, 9),
+                            nickname: '网站访客'
                         }
-                    },
-                    onError: (error) => {
-                        console.error('Coze SDK Error:', error);
-                        statusEl.innerHTML = `
-                            <p>智能体服务遇到问题</p>
-                            <p><small>${error.message || '请检查配置信息'}</small></p>
-                        `;
-                        statusEl.className = 'status error';
-                    }
-                });
+                    };
 
-                // 成功初始化
-                statusEl.innerHTML = `
-                    <p>✅ 智能助手已就绪！</p>
-                    <p><small>请点击右下角蓝色图标开始对话</small></p>
-                `;
-                statusEl.className = 'status success';
+                    // 尝试初始化
+                    const botInstance = new CozeWebSDK.WebChatClient(botConfig);
+                    
+                    statusEl.innerHTML = `
+                        <p>✅ 智能体初始化成功！</p>
+                        <p><small>请点击右下角图标开始对话</small></p>
+                    `;
+                    statusEl.className = 'status success';
+                    
+                } else {
+                    // 方法2：如果标准方法不可用，尝试其他可能的API
+                    statusEl.innerHTML = `
+                        <p>⚠️ 使用备用初始化方案...</p>
+                        <p><small>尝试直接调用可用方法</small></p>
+                    `;
+                    tryAlternativeInit();
+                }
 
             } catch (error) {
                 statusEl.innerHTML = `
-                    <p>❌ 初始化失败</p>
-                    <p><small>${error.message || '未知错误'}</small></p>
+                    <p>❌ 初始化错误</p>
+                    <p><small>${error.message}</small></p>
+                    <p><small>请点击"测试SDK"按钮查看详细信息</small></p>
                 `;
                 statusEl.className = 'status error';
-                console.error('初始化错误:', error);
+                console.error('初始化错误详情:', error);
             }
         }
 
-        // 备用SDK加载方案
-        function loadFallbackSDK() {
-            const statusEl = document.getElementById('status');
-            statusEl.innerHTML = '<p>正在尝试备用加载方案...</p>';
-            
-            // 尝试多个备用CDN
-            const fallbackSources = [
-                'https://cdn.jsdelivr.net/npm/@coze/web-sdk@1.1.0/dist/coze-sdk.min.js',
-                'https://unpkg.com/@coze/web-sdk@1.1.0/dist/coze-sdk.min.js',
-                'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js'
-            ];
-            
-            let currentTry = 0;
-            
-            function tryLoad() {
-                if (currentTry >= fallbackSources.length) {
-                    statusEl.innerHTML = `
-                        <p>❌ 所有加载方案均失败</p>
-                        <p><small>请检查网络环境或联系管理员</small></p>
-                    `;
-                    statusEl.className = 'status error';
-                    return;
-                }
-                
-                const script = document.createElement('script');
-                script.src = fallbackSources[currentTry];
-                script.onload = () => {
-                    statusEl.innerHTML = '<p>备用方案加载成功，正在初始化...</p>';
-                    setTimeout(initializeSmartAssistant, 100);
-                };
-                script.onerror = () => {
-                    currentTry++;
-                    tryLoad();
-                };
-                document.head.appendChild(script);
+        // 备用初始化方案
+        function tryAlternativeInit() {
+            // 检查是否有其他可用的初始化方法
+            if (window.coze && typeof window.coze.init === 'function') {
+                window.coze.init({
+                    botId: 'YOUR_BOT_ID_HERE',
+                    token: 'YOUR_ACCESS_TOKEN_HERE'
+                });
+                statusEl.innerHTML = '<p>✅ 备用方案初始化成功</p>';
+            } else {
+                statusEl.innerHTML = `
+                    <p>❌ 无可用初始化方法</p>
+                    <p><small>请检查SDK版本兼容性</small></p>
+                `;
             }
-            
-            tryLoad();
         }
 
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 先尝试内联SDK初始化
-            setTimeout(initializeSmartAssistant, 100);
-        });
-    </script>
-
-    <!-- 内联的Coze SDK代码（Base64编码确保可用性） -->
-    <script>
-    // 这里原本应该是Base64编码的SDK代码，但由于长度限制无法完整包含
-    // 我们使用动态加载方案来确保可用性
-    </script>
-    
-    <!-- 直接内联简化版SDK加载器 -->
-    <script>
-    (function(){
-        // 简化版SDK加载逻辑
-        if (typeof CozeWebSDK === 'undefined') {
-            // 如果SDK未定义，设置一个空的占位符，让fallback方案处理
-            window.CozeWebSDK = window.CozeWebSDK || {};
-        }
-    })();
+        // 页面加载完成后开始检测
+        document.addEventListener('DOMContentLoaded', checkSDKLoad);
     </script>
 </body>
 </html>
