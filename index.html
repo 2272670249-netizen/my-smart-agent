@@ -5,79 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的Coze智能体</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        #status { color: #d63384; margin-top: 20px; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .loading { color: #0d6efd; }
+        .success { color: #198754; background: #e6f7ee; }
+        .error { color: #dc3545; background: #fce8e8; }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>欢迎使用我的智能体</h1>
-    <p id="status">正在加载Coze SDK...</p>
+    <div class="container">
+        <h1>我的AI智能助手</h1>
+        <div id="status" class="status loading">
+            <p>正在初始化智能体服务...</p>
+        </div>
+    </div>
 
+    <!-- 使用jsDelivr CDN托管的SDK -->
+    <script src="https://cdn.jsdelivr.net/gh/coze-web-sdk/mirror@1.1.0/dist/coze-sdk.min.js"></script>
+    
     <script>
-        // 配置多个可用的SDK源，按顺序尝试加载
-        const sdkSources = [
-            'https://lf-cdn.coze.com/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js', // 首选
-            'https://static.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js',  // 备选1
-            'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js'    // 备选2
-        ];
-
-        let currentSourceIndex = 0;
-        const statusEl = document.getElementById('status');
-
-        function loadSDK(sourceIndex) {
-            if (sourceIndex >= sdkSources.length) {
-                statusEl.textContent = '错误：所有SDK源均加载失败，请检查网络连接或稍后重试。';
-                return;
-            }
-
-            const script = document.createElement('script');
-            script.src = sdkSources[sourceIndex];
+        // 增强型初始化函数
+        function initCozeBot() {
+            const statusEl = document.getElementById('status');
             
-            script.onload = function() {
-                statusEl.textContent = 'SDK加载成功，正在初始化...';
-                initializeCozeBot();
-            };
-            
-            script.onerror = function() {
-                statusEl.textContent = `尝试源 ${sourceIndex + 1} 失败，尝试下一个...`;
-                currentSourceIndex++;
-                loadSDK(currentSourceIndex);
-            };
-            
-            document.head.appendChild(script);
-        }
-
-        function initializeCozeBot() {
+            // 检查SDK是否加载成功
             if (typeof CozeWebSDK === 'undefined') {
-                statusEl.textContent = '错误：CozeWebSDK 对象未定义。';
+                statusEl.innerHTML = `
+                    <p class="error">SDK加载失败！</p>
+                    <p>请检查网络连接后刷新页面</p>
+                `;
                 return;
             }
 
             try {
-                new CozeWebSDK.WebChatClient({
+                // 初始化配置
+                const botClient = new CozeWebSDK.WebChatClient({
                     config: {
-                        bot_id: '7578063729297145899' // 务必替换为您的真实智能体ID
+                        bot_id: '7578063729297145899' // 必须替换为您的真实智能体ID
                     },
                     auth: {
                         type: 'token',
-                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX' // 务必替换为您的真实访问令牌
+                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX' // 必须替换为您的真实访问令牌
                     },
                     userInfo: {
-                        id: 'guest_user_' + Date.now(),
-                        nickname: '网站访客'
+                        id: 'guest_' + Math.random().toString(36).substring(2, 11),
+                        nickname: '访客用户'
+                    },
+                    ui: {
+                        asstBtn: {
+                            isNeed: true,
+                            color: '#4a6bdf',
+                            size: 'large'
+                        },
+                        chatBot: {
+                            title: '我的AI助手',
+                            welcome: '您好！请问有什么可以帮您？',
+                            style: {
+                                primaryColor: '#4a6bdf'
+                            }
+                        }
                     }
                 });
-                
-                statusEl.textContent = '加载完成！请点击右下角图标开始聊天。';
-                statusEl.style.color = 'green';
-                
+
+                // 监听SDK就绪事件
+                botClient.on('sdk.ready', () => {
+                    statusEl.innerHTML = `
+                        <p class="success">智能体已就绪！</p>
+                        <p>请点击右下角蓝色图标开始对话</p>
+                    `;
+                });
+
+                // 错误处理
+                botClient.on('sdk.error', (error) => {
+                    statusEl.innerHTML = `
+                        <p class="error">服务连接异常</p>
+                        <p>${error.message || '请稍后重试'}</p>
+                    `;
+                });
+
             } catch (error) {
-                statusEl.textContent = '初始化失败: ' + error.message;
+                document.getElementById('status').innerHTML = `
+                    <p class="error">初始化失败</p>
+                    <p>${error.message || '未知错误'}</p>
+                `;
+                console.error('Coze初始化错误:', error);
             }
         }
 
-        // 开始加载流程
-        loadSDK(currentSourceIndex);
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initCozeBot);
     </script>
 </body>
 </html>
