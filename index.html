@@ -470,81 +470,81 @@
         </section>
         
         <div class="main-content">
-                <div class="info-panel">
-                    <div class="info-section">
-                        <h3><i class="fas fa-ruler-combined"></i> 评价维度</h3>
-                        <p>基于课程标准的四大核心素养：</p>
-                        <ul class="dimension-list">
-                            <li><strong>信息意识</strong> - 对信息的敏感度与价值判断</li>
-                            <li><strong>计算思维</strong> - 问题抽象、分解、建模能力</li>
-                            <li><strong>数字化学习与创新</strong> - 工具使用与创意表达</li>
-                            <li><strong>信息社会责任</strong> - 规范意识与伦理观念</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3><i class="fas fa-brain"></i> 认知层次</h3>
-                        <p>基于布鲁姆教育目标分类学：</p>
-                        <div class="bloom-levels">
-                            <div class="bloom-level">记忆/理解</div>
-                            <div class="bloom-level">应用</div>
-                            <div class="bloom-level highlight">分析</div>
-                            <div class="bloom-level highlight">评价</div>
-                            <div class="bloom-level">创造</div>
-                        </div>
-                        <p style="margin-top: 10px; font-size: 0.85rem;">标注的层次为当前重点培养目标</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3><i class="fas fa-cogs"></i> 系统状态</h3>
-                        <p>启智导师评价系统运行正常，已准备为您提供专业评价服务。</p>
-                        <div class="status-indicator">
-                            <div class="status-dot"></div>
-                            <span class="status-text" id="statusText">正在启动智能体...</span>
-                        </div>
-                    </div>
+            <div class="info-panel">
+                <div class="info-section">
+                    <h3><i class="fas fa-ruler-combined"></i> 评价维度</h3>
+                    <p>基于课程标准的四大核心素养：</p>
+                    <ul class="dimension-list">
+                        <li><strong>信息意识</strong> - 对信息的敏感度与价值判断</li>
+                        <li><strong>计算思维</strong> - 问题抽象、分解、建模能力</li>
+                        <li><strong>数字化学习与创新</strong> - 工具使用与创意表达</li>
+                        <li><strong>信息社会责任</strong> - 规范意识与伦理观念</li>
+                    </ul>
                 </div>
                 
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <h2><i class="fas fa-robot"></i> 启智导师对话区</h2>
-                        <div class="chat-actions">
-                            <button class="chat-action-btn" title="使用指南" id="helpBtn">
-                                <i class="fas fa-question"></i>
-                            </button>
-                            <button class="chat-action-btn" title="刷新页面" id="refreshBtn">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                        </div>
+                <div class="info-section">
+                    <h3><i class="fas fa-brain"></i> 认知层次</h3>
+                    <p>基于布鲁姆教育目标分类学：</p>
+                    <div class="bloom-levels">
+                        <div class="bloom-level">记忆/理解</div>
+                        <div class="bloom-level">应用</div>
+                        <div class="bloom-level highlight">分析</div>
+                        <div class="bloom-level highlight">评价</div>
+                        <div class="bloom-level">创造</div>
                     </div>
-                    
-                    <div class="coze-widget-container">
-                        <!-- 初始加载状态 -->
-                        <div id="chat-initial-state" class="chat-initial-state">
-                            <i class="fas fa-robot" style="font-size: 48px; color: var(--primary-color); margin-bottom: 15px;"></i>
-                            <h3 style="color: var(--primary-color); margin-bottom: 10px;">正在启动启智导师...</h3>
-                            <p style="color: var(--gray-medium;">智能体加载中，请稍候</p>
-                            <div class="loading-spinner">
-                                <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary-color);"></i>
-                            </div>
-                        </div>
-                        
-                        <!-- Coze Widget 容器 -->
-                        <div id="coze-widget" class="coze-widget" style="display: none;"></div>
-                        
-                        <!-- 错误消息 -->
-                        <div id="error-message" class="error-message" style="display: none;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning-color); margin-bottom: 20px;"></i>
-                            <h3 style="color: var(--error-color); margin-bottom: 10px;">智能体加载失败</h3>
-                            <p style="color: var(--gray-medium); margin-bottom: 15px;">抱歉，评价智能体暂时无法加载。</p>
-                            <p style="color: var(--gray-medium); font-size: 0.9rem; margin-bottom: 20px;" id="error-details">可能原因：网络连接问题或配置错误</p>
-                            <button id="retryBtn" class="cta-button" style="padding: 10px 20px;">
-                                <i class="fas fa-redo"></i> 重新加载
-                            </button>
-                        </div>
+                    <p style="margin-top: 10px; font-size: 0.85rem;">标注的层次为当前重点培养目标</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3><i class="fas fa-cogs"></i> 系统状态</h3>
+                    <p>启智导师评价系统运行正常，已准备为您提供专业评价服务。</p>
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span class="status-text" id="statusText">正在启动智能体...</span>
                     </div>
                 </div>
             </div>
+            
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2><i class="fas fa-robot"></i> 启智导师对话区</h2>
+                    <div class="chat-actions">
+                        <button class="chat-action-btn" title="使用指南" id="helpBtn">
+                            <i class="fas fa-question"></i>
+                        </button>
+                        <button class="chat-action-btn" title="刷新页面" id="refreshBtn">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="coze-widget-container">
+                    <!-- 初始加载状态 -->
+                    <div id="chat-initial-state" class="chat-initial-state">
+                        <i class="fas fa-robot" style="font-size: 48px; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <h3 style="color: var(--primary-color); margin-bottom: 10px;">正在启动启智导师...</h3>
+                        <p style="color: var(--gray-medium;">智能体加载中，请稍候</p>
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary-color;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Coze Widget 容器 -->
+                    <div id="coze-widget" class="coze-widget" style="display: none;"></div>
+                    
+                    <!-- 错误消息 -->
+                    <div id="error-message" class="error-message" style="display: none;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning-color); margin-bottom: 20px;"></i>
+                        <h3 style="color: var(--error-color); margin-bottom: 10px;">智能体加载失败</h3>
+                        <p style="color: var(--gray-medium); margin-bottom: 15px;">抱歉，评价智能体暂时无法加载。</p>
+                        <p style="color: var(--gray-medium); font-size: 0.9rem; margin-bottom: 20px;" id="error-details">可能原因：网络连接问题或配置错误</p>
+                        <button id="retryBtn" class="cta-button" style="padding: 10px 20px;">
+                            <i class="fas fa-redo"></i> 重新加载
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <footer>
             <div class="footer-content">
@@ -560,8 +560,8 @@
         </footer>
     </div>
 
-    <!-- 引入Coze SDK -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
+    <!-- 使用更稳定的Coze SDK版本 -->
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/coze-web-sdk/1.0.8/lib/index.js"></script>
     
     <script>
         // 页面加载完成后自动初始化智能体
@@ -600,29 +600,17 @@
                     throw new Error('Token或Bot ID未配置');
                 }
                 
-                // 创建Coze客户端
-                const cozeClient = new CozeWebSDK.WebChatClient({
+                // 创建Coze客户端 - 使用新的初始化方法
+                const cozeClient = window.CozeWebSDK.init({
                     config: {
                         bot_id: botId,
+                        token: token
                     },
                     componentProps: {
                         title: '启智导师 - 评价智能体',
-                        // 添加更多UI配置
-                        header: {
-                            isShow: true,
-                            isNeedClose: true
-                        },
-                        chat: {
-                            uploadable: false // 根据需求设置文件上传能力
-                        }
-                    },
-                    auth: {
-                        type: 'token',
-                        token: token,
-                        onRefreshToken: function() {
-                            console.log('Token刷新回调被调用');
-                            return token;
-                        }
+                        // 可以添加更多UI配置
+                        welcome_message: '您好！我是启智导师，基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学，为您提供专业的学业评价服务。',
+                        input_placeholder: '请输入您的作业内容或问题...'
                     }
                 });
 
@@ -637,23 +625,12 @@
                     document.getElementById('chat-initial-state').style.display = 'none';
                     document.getElementById('error-message').style.display = 'none';
                     
-                    // 检查是否有iframe
-                    if (cozeClient.iframe) {
-                        // 添加iframe到容器
-                        cozeClient.iframe.style.width = '100%';
-                        cozeClient.iframe.style.height = '100%';
-                        cozeClient.iframe.style.border = 'none';
-                        cozeClient.iframe.style.borderRadius = '0 0 12px 12px';
-                        
-                        widgetContainer.appendChild(cozeClient.iframe);
-                        widgetContainer.style.display = 'block';
-                        
-                        console.log('Coze智能体已成功加载并嵌入到页面中');
-                        document.getElementById('statusText').textContent = '智能体已就绪 - 可以开始对话';
-                    } else {
-                        // 如果没有iframe，尝试使用其他方法
-                        throw new Error('无法创建Coze iframe');
-                    }
+                    // 使用mount方法将智能体挂载到容器
+                    cozeClient.mount(widgetContainer);
+                    widgetContainer.style.display = 'block';
+                    
+                    console.log('Coze智能体已成功加载并嵌入到页面中');
+                    document.getElementById('statusText').textContent = '智能体已就绪 - 可以开始对话';
                 }
                 
             } catch (error) {
