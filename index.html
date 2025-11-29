@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>启智导师 - 信息科技学业评价智能体</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloud.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #4361ee;
@@ -391,7 +391,7 @@
             height: 100%;
             border: none;
         }
-        
+
         .chat-initial-state {
             display: flex;
             flex-direction: column;
@@ -614,14 +614,13 @@
                     throw new Error('Token或Bot ID未配置');
                 }
                 
-                // 创建Coze客户端 - 修复配置
+                // 创建Coze客户端 - 修复认证配置
                 const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
                         bot_id: botId,
                     },
                     componentProps: {
                         title: '启智导师 - 评价智能体',
-                        displayStyle: 'embedded' // 明确指定嵌入模式
                     },
                     auth: {
                         type: 'token',
