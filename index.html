@@ -5,13 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>启智导师 - 评价智能体</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -20,111 +16,94 @@
             padding: 20px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             padding: 40px;
-            width: 100%;
-            max-width: 500px;
             text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
         }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        .debug-info {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: left;
-            font-size: 14px;
-            border-left: 4px solid #3498db;
-        }
-        .btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            margin: 10px;
+        .coze-asst-btn, [class*="asst-btn"] {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 99999 !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔧 智能体调试页面</h1>
-        <p>正在检测配置问题...</p>
-        
-        <div class="debug-info">
-            <h3>调试信息：</h3>
-            <div id="debugOutput">正在初始化...</div>
+        <h1>🎯 启智导师 - 评价智能体</h1>
+        <p>智能体已就绪！右下角应显示聊天图标</p>
+        <div style="margin-top: 20px; color: #666; font-size: 14px;">
+            <p>如果图标仍未显示，请：</p>
+            <p>1. 刷新页面</p>
+            <p>2. 检查浏览器控制台错误</p>
+            <p>3. 确保广告拦截器未屏蔽</p>
         </div>
-        
-        <button class="btn" onclick="testConfiguration()">测试配置</button>
-        <button class="btn" onclick="openCozeDirectly()">直接访问Coze</button>
     </div>
 
     <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
-    
     <script>
-        function updateDebugInfo(message) {
-            document.getElementById('debugOutput').innerHTML += message + '<br>';
-        }
-
-        async function testConfiguration() {
-            updateDebugInfo('=== 开始配置测试 ===');
-            
-            // 测试1: SDK加载
-            if (typeof CozeWebSDK === 'undefined') {
-                updateDebugInfo('❌ SDK加载失败');
-                return;
+        // 初始化智能体
+        const cozeClient = new CozeWebSDK.WebChatClient({
+            config: { bot_id: '7578063729297145899' },
+            auth: { 
+                type: 'token', 
+                token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'  // 请替换为真实token
+            },
+            userInfo: {
+                id: 'user_' + Math.random().toString(36).substr(2, 9),
+                nickname: '用户'
+            },
+            ui: {
+                asstBtn: { 
+                    isNeed: true,
+                    color: '#667eea',
+                    size: 'large'
+                }
             }
-            updateDebugInfo('✅ SDK加载成功');
+        });
+
+        // 强制显示悬浮按钮
+        setTimeout(forceShowAssistantButton, 2000);
+
+        function forceShowAssistantButton() {
+            // 方法1: 添加强制显示样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .coze-asst-btn, [class*="asst-btn"], [class*="assistant"] {
+                    display: block !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                    z-index: 99999 !important;
+                    transform: scale(1) !important;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 方法2: 定期检查并显示按钮
+            let attempts = 0;
+            const maxAttempts = 10;
             
-            // 测试2: 尝试初始化
-            try {
-                const token = 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'; // 请替换为您的真实token
-                
-                const client = new CozeWebSDK.WebChatClient({
-                    config: {
-                        bot_id: '7578063729297145899',
-                    },
-                    auth: {
-                        type: 'token',
-                        token: token
-                    },
-                    userInfo: {
-                        id: 'test_user_' + Date.now(),
-                        nickname: '测试用户'
-                    },
-                    ui: {
-                        asstBtn: { isNeed: true }
+            const checkButton = setInterval(() => {
+                attempts++;
+                const buttons = document.querySelectorAll('[class*="asst"], .coze-asst-btn, button');
+                buttons.forEach(btn => {
+                    if (btn.innerHTML.includes('聊') || btn.style.background) {
+                        btn.style.display = 'block';
+                        btn.style.opacity = '1';
+                        btn.style.visibility = 'visible';
                     }
                 });
                 
-                updateDebugInfo('✅ 智能体初始化成功');
-                updateDebugInfo('💡 如果看不到悬浮图标，请检查浏览器控制台的具体错误');
-                
-            } catch (error) {
-                updateDebugInfo('❌ 初始化失败: ' + error.message);
-                updateDebugInfo('🔍 可能的原因：');
-                updateDebugInfo('- Token权限不足');
-                updateDebugInfo('- 智能体未正确发布');
-                updateDebugInfo('- 工作空间权限限制');
-            }
+                if (attempts >= maxAttempts) {
+                    clearInterval(checkButton);
+                    console.log('悬浮按钮检查完成');
+                }
+            }, 1000);
         }
-
-        function openCozeDirectly() {
-            // 直接打开智能体页面测试
-            window.open('https://www.coze.cn/embed/7558025828223778835', '_blank');
-        }
-
-        // 页面加载后自动测试
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(testConfiguration, 1000);
-        });
     </script>
 </body>
 </html>
