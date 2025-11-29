@@ -15,7 +15,6 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -28,105 +27,67 @@
             width: 100%;
             max-width: 500px;
             text-align: center;
-            backdrop-filter: blur(10px);
-        }
-        .robot-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
         }
         h1 {
             color: #2c3e50;
             margin-bottom: 10px;
-            font-size: 28px;
-            font-weight: 600;
         }
-        .subtitle {
-            color: #7f8c8d;
-            margin-bottom: 30px;
-            font-size: 16px;
-        }
-        .status-box {
+        .debug-info {
             background: #f8f9fa;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 25px 0;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 14px;
             border-left: 4px solid #3498db;
         }
-        .status-success {
-            border-left-color: #2ecc71;
-            background: #e8f6ef;
-        }
-        .status-error {
-            border-left-color: #e74c3c;
-            background: #fdedec;
-        }
-        .chat-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn {
+            background: #667eea;
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 12px 24px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 18px;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .chat-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        .hidden {
-            display: none;
-        }
-        /* 强制显示悬浮按钮的样式 */
-        .coze-asst-btn {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            z-index: 10000 !important;
+            margin: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="robot-icon">🤖</div>
-        <h1>启智导师 - 评价智能体</h1>
-        <p class="subtitle">基于Coze平台的智能对话助手</p>
+        <h1>🔧 智能体调试页面</h1>
+        <p>正在检测配置问题...</p>
         
-        <div id="statusBox" class="status-box status-success">
-            <div style="font-size: 18px; margin-bottom: 10px;">✅ 智能体已就绪！</div>
-            <div>请点击下方按钮开始对话</div>
+        <div class="debug-info">
+            <h3>调试信息：</h3>
+            <div id="debugOutput">正在初始化...</div>
         </div>
-
-        <button id="startChatBtn" class="chat-btn">
-            <span>💬 开始对话</span>
-        </button>
-
-        <div style="margin-top: 20px; font-size: 14px; color: #7f8c8d;">
-            <p>如果右下角没有显示图标，请点击上方按钮</p>
-        </div>
+        
+        <button class="btn" onclick="testConfiguration()">测试配置</button>
+        <button class="btn" onclick="openCozeDirectly()">直接访问Coze</button>
     </div>
 
-    <!-- 使用您提供的可用SDK -->
     <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
     
     <script>
-        let cozeClient = null;
-        let chatStarted = false;
+        function updateDebugInfo(message) {
+            document.getElementById('debugOutput').innerHTML += message + '<br>';
+        }
 
-        function initializeCozeBot() {
+        async function testConfiguration() {
+            updateDebugInfo('=== 开始配置测试 ===');
+            
+            // 测试1: SDK加载
+            if (typeof CozeWebSDK === 'undefined') {
+                updateDebugInfo('❌ SDK加载失败');
+                return;
+            }
+            updateDebugInfo('✅ SDK加载成功');
+            
+            // 测试2: 尝试初始化
             try {
                 const token = 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'; // 请替换为您的真实token
                 
-                cozeClient = new CozeWebSDK.WebChatClient({
+                const client = new CozeWebSDK.WebChatClient({
                     config: {
                         bot_id: '7578063729297145899',
                     },
@@ -135,110 +96,34 @@
                         token: token
                     },
                     userInfo: {
-                        id: 'user_' + Math.random().toString(36).substr(2, 9),
-                        nickname: '启智导师用户'
+                        id: 'test_user_' + Date.now(),
+                        nickname: '测试用户'
                     },
                     ui: {
-                        asstBtn: {
-                            isNeed: true,
-                            color: '#667eea',
-                            size: 'large'
-                        },
-                        chatBot: {
-                            title: '启智导师 - 评价智能体',
-                            welcome: '您好！我是启智导师，很高兴为您提供学习评价和指导。请告诉我您需要评价的内容吧！',
-                            style: {
-                                primaryColor: '#667eea'
-                            }
-                        }
+                        asstBtn: { isNeed: true }
                     }
                 });
-
-                console.log('Coze智能体初始化成功');
                 
-                // 强制显示悬浮按钮（如果存在但被隐藏）
-                setTimeout(() => {
-                    const asstBtn = document.querySelector('.coze-asst-btn, [class*="asst-btn"], [class*="assistant"]');
-                    if (asstBtn) {
-                        asstBtn.style.display = 'block';
-                        asstBtn.style.opacity = '1';
-                        asstBtn.style.visibility = 'visible';
-                    }
-                }, 1000);
-
+                updateDebugInfo('✅ 智能体初始化成功');
+                updateDebugInfo('💡 如果看不到悬浮图标，请检查浏览器控制台的具体错误');
+                
             } catch (error) {
-                console.error('初始化错误:', error);
-                document.getElementById('statusBox').innerHTML = `
-                    <div style="color: #e74c3c;">
-                        <div style="font-size: 18px; margin-bottom: 10px;">❌ 初始化失败</div>
-                        <div>错误: ${error.message}</div>
-                    </div>
-                `;
+                updateDebugInfo('❌ 初始化失败: ' + error.message);
+                updateDebugInfo('🔍 可能的原因：');
+                updateDebugInfo('- Token权限不足');
+                updateDebugInfo('- 智能体未正确发布');
+                updateDebugInfo('- 工作空间权限限制');
             }
         }
 
-        // 手动打开聊天窗口
-        function openChatWindow() {
-            if (!cozeClient) {
-                alert('智能体尚未初始化完成，请稍后重试');
-                return;
-            }
-
-            // 尝试通过编程方式打开聊天窗口
-            try {
-                // 方法1: 触发悬浮按钮的点击事件
-                const asstBtn = document.querySelector('.coze-asst-btn, [class*="asst-btn"], [class*="assistant"]');
-                if (asstBtn) {
-                    asstBtn.click();
-                } else {
-                    // 方法2: 如果悬浮按钮不存在，显示提示
-                    alert('聊天功能已就绪！如果右下角没有图标，请尝试：\n1. 刷新页面\n2. 检查浏览器控制台是否有错误\n3. 使用全屏模式');
-                    
-                    // 方法3: 尝试直接打开iframe
-                    openFullscreenChat();
-                }
-            } catch (error) {
-                console.error('打开聊天窗口失败:', error);
-                openFullscreenChat();
-            }
+        function openCozeDirectly() {
+            // 直接打开智能体页面测试
+            window.open('https://www.coze.cn/embed/7558025828223778835', '_blank');
         }
 
-        // 全屏聊天窗口备用方案
-        function openFullscreenChat() {
-            const chatHTML = `
-                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 10000;">
-                    <div style="position: absolute; top: 10px; right: 10px;">
-                        <button onclick="document.getElementById('fullscreenChat').remove()" style="padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">关闭</button>
-                    </div>
-                    <iframe src="https://www.coze.cn/embed/7558025828223778835" style="width: 100%; height: 100%; border: none;"></iframe>
-                </div>
-            `;
-            
-            const chatDiv = document.createElement('div');
-            chatDiv.id = 'fullscreenChat';
-            chatDiv.innerHTML = chatHTML;
-            document.body.appendChild(chatDiv);
-        }
-
-        // 页面加载完成后初始化
+        // 页面加载后自动测试
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化智能体
-            setTimeout(initializeCozeBot, 500);
-            
-            // 绑定开始对话按钮事件
-            document.getElementById('startChatBtn').addEventListener('click', openChatWindow);
-            
-            // 添加键盘快捷键
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                    openChatWindow();
-                }
-            });
-        });
-
-        // 全局错误处理
-        window.addEventListener('error', function(e) {
-            console.error('全局错误:', e.error);
+            setTimeout(testConfiguration, 1000);
         });
     </script>
 </body>
