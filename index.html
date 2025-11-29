@@ -4,49 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的Coze智能体</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        #status { color: #d63384; margin-top: 20px; }
+    </style>
 </head>
 <body>
     <h1>欢迎使用我的智能体</h1>
-    <p id="status">正在初始化聊天组件...</p>
+    <p id="status">正在加载Coze SDK...</p>
 
-    <!-- 尝试更换一个SDK版本 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js"></script>
-    
     <script>
-        // 使用更简化的初始化配置
-        document.addEventListener('DOMContentLoaded', function() {
-            // 检查SDK是否加载成功
+        // 配置多个可用的SDK源，按顺序尝试加载
+        const sdkSources = [
+            'https://lf-cdn.coze.com/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js', // 首选
+            'https://static.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js',  // 备选1
+            'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js'    // 备选2
+        ];
+
+        let currentSourceIndex = 0;
+        const statusEl = document.getElementById('status');
+
+        function loadSDK(sourceIndex) {
+            if (sourceIndex >= sdkSources.length) {
+                statusEl.textContent = '错误：所有SDK源均加载失败，请检查网络连接或稍后重试。';
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = sdkSources[sourceIndex];
+            
+            script.onload = function() {
+                statusEl.textContent = 'SDK加载成功，正在初始化...';
+                initializeCozeBot();
+            };
+            
+            script.onerror = function() {
+                statusEl.textContent = `尝试源 ${sourceIndex + 1} 失败，尝试下一个...`;
+                currentSourceIndex++;
+                loadSDK(currentSourceIndex);
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function initializeCozeBot() {
             if (typeof CozeWebSDK === 'undefined') {
-                document.getElementById('status').textContent = '错误：Coze SDK 加载失败，请检查网络连接或稍后重试。';
+                statusEl.textContent = '错误：CozeWebSDK 对象未定义。';
                 return;
             }
 
             try {
-                // 初始化配置
-                const client = new CozeWebSDK.WebChatClient({
+                new CozeWebSDK.WebChatClient({
                     config: {
-                        bot_id: '7578063729297145899' // 请务必替换为您的真实智能体ID
+                        bot_id: '7578063729297145899' // 务必替换为您的真实智能体ID
                     },
                     auth: {
                         type: 'token',
-                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX' // 请务必替换为您的真实访问令牌
+                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX' // 务必替换为您的真实访问令牌
                     },
                     userInfo: {
                         id: 'guest_user_' + Date.now(),
                         nickname: '网站访客'
                     }
                 });
-
-                // 可选：监听成功事件
-                client.on('sdk.ready', function() {
-                    document.getElementById('status').textContent = '加载完成！请点击页面右下角的圆形图标开始对话。';
-                });
-
+                
+                statusEl.textContent = '加载完成！请点击右下角图标开始聊天。';
+                statusEl.style.color = 'green';
+                
             } catch (error) {
-                console.error('初始化失败:', error);
-                document.getElementById('status').textContent = '聊天功能初始化失败: ' + error.message;
+                statusEl.textContent = '初始化失败: ' + error.message;
             }
-        });
+        }
+
+        // 开始加载流程
+        loadSDK(currentSourceIndex);
     </script>
 </body>
 </html>
