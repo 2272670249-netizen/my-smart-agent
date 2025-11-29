@@ -4,60 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的Coze智能体</title>
-    <!-- 预加载SDK -->
-    <link rel="preconnect" href="https://lf-cdn.coze.cn">
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        .status { color: #666; margin-top: 20px; }
-    </style>
 </head>
 <body>
     <h1>欢迎使用我的智能体</h1>
-    <p id="status" class="status">正在加载聊天组件...</p>
+    <p id="status">正在初始化聊天组件...</p>
 
-    <!-- 使用最新版SDK -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.17/libs/cn/index.js"></script>
+    <!-- 尝试更换一个SDK版本 -->
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.1.0/libs/cn/index.js"></script>
     
     <script>
-        // 添加加载状态检测
+        // 使用更简化的初始化配置
         document.addEventListener('DOMContentLoaded', function() {
+            // 检查SDK是否加载成功
             if (typeof CozeWebSDK === 'undefined') {
-                document.getElementById('status').textContent = 'SDK加载失败，请检查网络';
+                document.getElementById('status').textContent = '错误：Coze SDK 加载失败，请检查网络连接或稍后重试。';
                 return;
             }
 
             try {
-                new CozeWebSDK.WebChatClient({
+                // 初始化配置
+                const client = new CozeWebSDK.WebChatClient({
                     config: {
-                        bot_id: '7578063729297145899' // 替换为真实ID
+                        bot_id: '7578063729297145899' // 请务必替换为您的真实智能体ID
                     },
                     auth: {
                         type: 'token',
-                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX' // 替换为真实令牌
+                        token: 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX' // 请务必替换为您的真实访问令牌
                     },
                     userInfo: {
-                        id: 'guest_' + Math.random().toString(36).substr(2, 9),
-                        nickname: '访客'
-                    },
-                    ui: {
-                        asstBtn: {
-                            isNeed: true,
-                            color: '#1890ff' // 设置悬浮球颜色
-                        },
-                        chatBot: {
-                            title: '我的AI助手',
-                            welcome: '您好！请问有什么可以帮您？'
-                        }
-                    },
-                    onError: (error) => {
-                        console.error('Coze SDK Error:', error);
-                        document.getElementById('status').textContent = '聊天功能加载失败';
+                        id: 'guest_user_' + Date.now(),
+                        nickname: '网站访客'
                     }
                 });
-                document.getElementById('status').textContent = '加载完成，请点击右下角图标开始聊天';
-            } catch (e) {
-                console.error(e);
-                document.getElementById('status').textContent = '初始化失败：' + e.message;
+
+                // 可选：监听成功事件
+                client.on('sdk.ready', function() {
+                    document.getElementById('status').textContent = '加载完成！请点击页面右下角的圆形图标开始对话。';
+                });
+
+            } catch (error) {
+                console.error('初始化失败:', error);
+                document.getElementById('status').textContent = '聊天功能初始化失败: ' + error.message;
             }
         });
     </script>
