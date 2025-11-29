@@ -195,6 +195,33 @@
             color: white;
             text-decoration: none;
         }
+
+        /* 添加移动端提示样式 */
+        .mobile-tips {
+            display: none;
+            background: #fff8e1;
+            border: 1px solid #ffd54f;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .loading-dots:after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        #status {
+            font-weight: bold;
+            color: #1a73e8;
+        }
     </style>
 </head>
 <body>
@@ -257,26 +284,39 @@
                     <p>点击右下角按钮与启智导师智能体对话，获取个性化评价和建议。</p>
                 </div>
                 
+                <!-- 添加移动端提示 -->
+                <div id="mobileTips" class="mobile-tips">
+                    💡 移动端访问提示：如果按钮不显示，请尝试刷新页面或上下滑动
+                </div>
+                
                 <div class="chat-hint">
-                    <p>智能体已就绪，可以开始对话</p>
+                    <p>智能体状态: <span id="status">正在初始化...</span></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Coze SDK - 添加移动端检测和备用方案 -->
+    <!-- Coze SDK - 修复版本 -->
     <script>
         // 检测移动端
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // 移动端优化配置
         if (isMobile) {
-            document.getElementById('mobileTips').style.display = 'block';
+            const mobileTips = document.getElementById('mobileTips');
+            if (mobileTips) {
+                mobileTips.style.display = 'block';
+            }
             console.log('📱 移动端访问检测');
         }
 
         function loadCozeSDK() {
             const statusEl = document.getElementById('status');
+            if (!statusEl) {
+                console.error('找不到状态元素');
+                return;
+            }
+            
             let sdkLoaded = false;
             
             // 方法1: 主要SDK源
@@ -309,25 +349,37 @@
         }
 
         function loadFallbackSDK() {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+            
             // 备用SDK源
             const fallbackScript = document.createElement('script');
             fallbackScript.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
             
             fallbackScript.onload = function() {
-                document.getElementById('status').innerHTML = '备用SDK加载成功，初始化中<span class="loading-dots"></span>';
+                statusEl.innerHTML = '备用SDK加载成功，初始化中<span class="loading-dots"></span>';
                 initializeCozeBot();
             };
 
             fallbackScript.onerror = function() {
-                document.getElementById('status').innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
+                statusEl.innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
             };
 
             document.head.appendChild(fallbackScript);
         }
 
         function initializeCozeBot() {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+            
             try {
-                const token = 'pat_fjyGEnuRL7x64YqmjkgeKbkDCuj6fHbqu1cvUuCA8opW7C02QJaMUI3EpnhBb0bX'; // 替换为您的真实token
+                const token = 'pat_fjyGEnuRL7x64YqmjkgeKbkDCuj6fHbqu1cvUuCA8opW7C02QJaMUI3EpnhBb0bX';
+                
+                // 确保CozeWebSDK对象存在
+                if (typeof CozeWebSDK === 'undefined') {
+                    statusEl.innerHTML = '❌ SDK未正确加载，请刷新页面重试';
+                    return;
+                }
                 
                 const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
@@ -347,17 +399,17 @@
                     ui: {
                         asstBtn: {
                             isNeed: true,
-                            color: '#667eea',
+                            color: '#1a73e8', // 使用主题蓝色
                             size: isMobile ? 'medium' : 'large'
                         },
                         chatBot: {
                             title: '启智导师 - 评价智能体',
-                            welcome: '您好！我是启智导师，很高兴为您服务。'
+                            welcome: '您好！我是启智导师，基于信息科技课程标准和布鲁姆教育目标分类学，很高兴为您提供学业评价服务。'
                         }
                     }
                 });
 
-                document.getElementById('status').innerHTML = '✅ 智能体加载完成！请点击右下角图标开始对话';
+                statusEl.innerHTML = '✅ 智能体加载完成！请点击右下角图标开始对话';
                 
                 // 移动端特殊处理
                 if (isMobile) {
@@ -365,22 +417,34 @@
                         const tips = document.createElement('div');
                         tips.innerHTML = '💡 提示：如果图标不显示，请尝试上下滑动页面';
                         tips.style.cssText = 'font-size:12px; color:#666; margin-top:10px;';
-                        document.getElementById('status').appendChild(tips);
+                        statusEl.appendChild(tips);
                     }, 2000);
                 }
 
             } catch (error) {
-                document.getElementById('status').innerHTML = '❌ 初始化失败: ' + error.message;
+                console.error('Coze初始化错误:', error);
+                statusEl.innerHTML = '❌ 初始化失败: ' + error.message;
             }
         }
 
         // 页面加载
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 页面加载完成，开始初始化Coze智能体');
+            
             // 移动端延迟加载，提高成功率
             if (isMobile) {
                 setTimeout(loadCozeSDK, 500);
             } else {
                 loadCozeSDK();
+            }
+        });
+
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.error);
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.innerHTML = '❌ 发生错误，请刷新页面重试';
             }
         });
     </script>
