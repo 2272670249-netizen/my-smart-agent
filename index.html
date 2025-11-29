@@ -6,6 +6,7 @@
     <title>启智导师 - 信息科技学业评价智能体</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 原有的CSS样式保持不变 */
         :root {
             --primary-color: #4361ee;
             --primary-light: #e6ebff;
@@ -556,8 +557,8 @@
         </footer>
     </div>
 
-    <!-- 引入Coze SDK -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
+    <!-- 引入Coze SDK - 使用更稳定的版本 -->
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0/libs/cn/index.js"></script>
     
     <script>
         // 页面加载完成后初始化
@@ -614,21 +615,30 @@
                     throw new Error('Token或Bot ID未配置');
                 }
                 
-                // 创建Coze客户端 - 使用正确的配置
+                // 创建Coze客户端 - 修正配置
                 const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
                         bot_id: botId,
+                        // 添加嵌入模式配置
+                        embedded: true,
+                        // 禁用浮动按钮
+                        showFloatingButton: false
                     },
                     componentProps: {
                         title: '启智导师 - 评价智能体',
+                        // 配置为嵌入模式
+                        mode: 'embedded',
+                        // 设置容器样式
+                        style: {
+                            width: '100%',
+                            height: '100%',
+                            border: 'none',
+                            borderRadius: '0 0 12px 12px'
+                        }
                     },
                     auth: {
                         type: 'token',
-                        token: token,
-                        onRefreshToken: function() {
-                            console.log('Token刷新回调被调用');
-                            return token;
-                        }
+                        token: token
                     }
                 });
 
@@ -642,29 +652,45 @@
                     // 隐藏错误消息
                     document.getElementById('error-message').style.display = 'none';
                     
-                    // 检查是否有iframe
-                    if (cozeClient.iframe) {
-                        // 添加iframe到容器
-                        cozeClient.iframe.style.width = '100%';
-                        cozeClient.iframe.style.height = '100%';
-                        cozeClient.iframe.style.border = 'none';
-                        cozeClient.iframe.style.borderRadius = '0 0 12px 12px';
-                        
-                        widgetContainer.appendChild(cozeClient.iframe);
-                        widgetContainer.style.display = 'block';
-                        
-                        console.log('Coze智能体已成功加载并嵌入到页面中');
-                        document.getElementById('statusText').textContent = '智能体已就绪 - 可以开始对话';
-                    } else {
-                        // 如果没有iframe，尝试使用其他方法
-                        throw new Error('无法创建Coze iframe');
-                    }
+                    // 使用render方法正确渲染
+                    cozeClient.render(widgetContainer);
+                    
+                    // 显示容器
+                    widgetContainer.style.display = 'block';
+                    
+                    console.log('Coze智能体已成功加载并嵌入到页面中');
+                    document.getElementById('statusText').textContent = '智能体已就绪 - 可以开始对话';
                 }
                 
             } catch (error) {
                 console.error('加载Coze智能体时出错:', error);
                 showErrorMessage(error.message);
+                
+                // 尝试备用方案：使用iframe嵌入
+                tryFallbackEmbedding();
             }
+        }
+        
+        // 备用嵌入方案
+        function tryFallbackEmbedding() {
+            console.log('尝试备用嵌入方案...');
+            
+            const widgetContainer = document.getElementById('coze-widget');
+            if (!widgetContainer) return;
+            
+            // 创建iframe直接嵌入
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.coze.cn/embed/${botId}`;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.borderRadius = '0 0 12px 12px';
+            iframe.allow = 'microphone';
+            
+            widgetContainer.appendChild(iframe);
+            widgetContainer.style.display = 'block';
+            
+            console.log('已使用iframe备用方案嵌入智能体');
         }
         
         function showErrorMessage(errorMsg) {
