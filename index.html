@@ -4,648 +4,385 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>启智导师 - 信息科技学业评价智能体</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #4361ee;
-            --primary-light: #e6ebff;
-            --secondary-color: #3a0ca3;
-            --accent-color: #4cc9f0;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --success-color: #4bb543;
-            --warning-color: #ffcc00;
-            --error-color: #ff3333;
-            --gray-light: #f1f3f9;
-            --gray-medium: #6c757d;
-            --border-radius: 12px;
-            --shadow: 0 10px 30px rgba(0,0,0,0.08);
-            --transition: all 0.3s ease;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            font-family: "Microsoft YaHei", sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: var(--dark-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
             line-height: 1.6;
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            flex: 1;
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
         
+        /* 顶部导航栏 */
         header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            color: white;
         }
         
-        .logo {
+        .logo-area {
             display: flex;
             align-items: center;
-            gap: 15px;
         }
         
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary-color);
+        .logo-area h1 {
             font-size: 24px;
-            font-weight: bold;
+            margin-right: 20px;
         }
         
-        .logo-text h1 {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
+        .logo-area h2 {
+            font-size: 18px;
+            font-weight: normal;
         }
         
-        .logo-text p {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        
-        .nav-links {
+        nav ul {
             display: flex;
-            gap: 25px;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-        }
-        
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
-        
-        .main-content {
-            display: flex;
-            gap: 30px;
-            margin: 20px 0;
-            flex: 1;
-        }
-        
-        .info-panel {
-            flex: 0 0 300px;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            height: fit-content;
-        }
-        
-        .info-section {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
-        }
-        
-        .info-section:last-child {
-            border-bottom: none;
-        }
-        
-        .info-section h3 {
-            color: var(--primary-color);
-            margin-bottom: 12px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .info-section p {
-            color: var(--gray-medium);
-            line-height: 1.5;
-            font-size: 0.95rem;
-            margin-bottom: 10px;
-        }
-        
-        .dimension-list {
             list-style: none;
         }
         
-        .dimension-list li {
-            padding: 8px 0;
+        nav li {
+            margin-left: 25px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        
+        nav a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 主内容区 */
+        .main-content {
             display: flex;
-            align-items: flex-start;
-            gap: 10px;
+            flex: 1;
+            padding: 20px;
         }
         
-        .dimension-list li:before {
-            content: "•";
-            color: var(--primary-color);
-            font-weight: bold;
+        /* 左侧信息栏 */
+        .info-panel {
+            width: 30%;
+            padding-right: 20px;
         }
         
-        .bloom-levels {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
+        .panel-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .bloom-level {
-            background: var(--gray-light);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            text-align: center;
+        .panel-section h3 {
+            color: #1a73e8;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
         
-        .bloom-level.highlight {
-            background: var(--primary-light);
-            color: var(--primary-color);
-            font-weight: 600;
+        .panel-section ul {
+            padding-left: 20px;
+        }
+        
+        .panel-section li {
+            margin-bottom: 8px;
         }
         
         .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .status-dot {
+            display: inline-block;
             width: 10px;
             height: 10px;
+            background-color: #4caf50;
             border-radius: 50%;
-            background: var(--success-color);
-            animation: pulse 2s infinite;
+            margin-right: 8px;
         }
         
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        .status-text {
-            font-size: 0.9rem;
-            color: var(--gray-medium);
-        }
-        
-        .chat-container {
-            flex: 1;
+        /* 右侧内容区 */
+        .content-area {
+            width: 70%;
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            min-height: 650px;
-        }
-        
-        .chat-header {
-            background: var(--primary-color);
-            color: white;
-            padding: 18px 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .chat-header h2 {
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .chat-actions {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .chat-action-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .chat-action-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .coze-widget-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            height: 550px;
-        }
-        
-        .coze-widget {
-            flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .welcome-section {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 40px;
-            text-align: center;
-            box-shadow: var(--shadow);
             margin-bottom: 30px;
         }
         
         .welcome-section h2 {
-            color: var(--primary-color);
-            font-size: 2.2rem;
+            color: #1a73e8;
             margin-bottom: 15px;
         }
         
         .welcome-section p {
-            color: var(--gray-medium);
-            font-size: 1.1rem;
-            max-width: 700px;
-            margin: 0 auto 25px;
-            line-height: 1.6;
+            margin-bottom: 15px;
         }
         
-        .cta-button {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        .agent-status {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            border-left-color: #1a73e8;
+            margin: 20px 0;
         }
         
-        .cta-button:hover {
-            background: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+        .agent-status p {
+            margin-bottom: 10px;
         }
         
-        footer {
-            background: rgba(255,255,255,0.1);
-            color: white;
+        .chat-hint {
             text-align: center;
             padding: 20px;
-            margin-top: 30px;
-            border-radius: var(--border-radius);
+            color: #666;
         }
         
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
+        .highlight {
+            color: #1a73e8;
+            font-weight: bold;
         }
         
-        .footer-links {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .footer-links a {
+        .coze-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 50%;
             color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
             text-decoration: none;
-            font-size: 0.9rem;
-            transition: var(--transition);
         }
         
-        .footer-links a:hover {
-            opacity: 0.8;
+        .coze-button:hover {
+            background-color: #a9c8f5;
+            transform: scale(1.1);
         }
         
-        .access-note {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: var(--border-radius);
-            padding: 15px 20px;
-            margin-top: 20px;
-            border-left: 4px solid var(--success-color);
-        }
-        
-        .access-note h4 {
-            color: var(--success-color);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .loading-indicator {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-        }
-        
-        .error-message {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .chat-initial-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-            padding: 40px 20px;
-        }
-        
-        .coze-iframe-container {
+        .coze-link {
+            display: block;
             width: 100%;
             height: 100%;
-            border: none;
-        }
-        
-        .loading-spinner {
-            margin-top: 15px;
-        }
-        
-        @media (max-width: 992px) {
-            .main-content {
-                flex-direction: column;
-            }
-            
-            .info-panel {
-                flex: 1;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .welcome-section {
-                padding: 30px 20px;
-            }
-            
-            .welcome-section h2 {
-                font-size: 1.8rem;
-            }
-            
-            .info-panel {
-                padding: 20px;
-            }
-            
-            .bloom-levels {
-                grid-template-columns: 1fr;
-            }
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>启智导师</h1>
-                    <p>信息科技学业评价智能体</p>
-                </div>
+            <div class="logo-area">
+                <h1>启智导师</h1>
+                <h2>信息科技学业评价智能体</h2>
             </div>
-            <div class="nav-links">
-                <a href="#"><i class="fas fa-home"></i> 首页</a>
-                <a href="#"><i class="fas fa-book"></i> 课程标准</a>
-                <a href="#"><i class="fas fa-lightbulb"></i> 评价维度</a>
-                <a href="#"><i class="fas fa-question-circle"></i> 使用指南</a>
-            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">首页</a></li>
+                    <li><a href="#">课程标准</a></li>
+                    <li><a href="#">评价维度</a></li>
+                    <li><a href="#">使用指南</a></li>
+                </ul>
+            </nav>
         </header>
-        
-        <section class="welcome-section">
-            <h2>欢迎使用启智导师评价系统</h2>
-            <p>基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学，为初中信息科技课程提供专业的学业评价与个性化成长建议。</p>
-            
-            <div class="access-note">
-                <h4><i class="fas fa-check-circle"></i> 智能体已自动加载</h4>
-                <p>评价智能体已准备就绪，您可以直接在下方对话区开始使用</p>
-            </div>
-        </section>
         
         <div class="main-content">
             <div class="info-panel">
-                <div class="info-section">
-                    <h3><i class="fas fa-ruler-combined"></i> 评价维度</h3>
-                    <p>基于课程标准的四大核心素养：</p>
-                    <ul class="dimension-list">
-                        <li><strong>信息意识</strong> - 对信息的敏感度与价值判断</li>
-                        <li><strong>计算思维</strong> - 问题抽象、分解、建模能力</li>
-                        <li><strong>数字化学习与创新</strong> - 工具使用与创意表达</li>
-                        <li><strong>信息社会责任</strong> - 规范意识与伦理观念</li>
+                <div class="panel-section">
+                    <h3>评价维度</h3>
+                    <p>基于课程标准的四大核心素养:</p>
+                    <ul>
+                        <li><span class="highlight">信息意识</span> - 对信息的敏感度与价值判断</li>
+                        <li><span class="highlight">计算思维</span> - 问题抽象、分解、建模能力</li>
+                        <li><span class="highlight">数字化学习与创意表达</span></li>
+                        <li><span class="highlight">信息社会责任</span> - 规范意识与伦理观念</li>
                     </ul>
                 </div>
                 
-                <div class="info-section">
-                    <h3><i class="fas fa-brain"></i> 认知层次</h3>
-                    <p>基于布鲁姆教育目标分类学：</p>
-                    <div class="bloom-levels">
-                        <div class="bloom-level">记忆/理解</div>
-                        <div class="bloom-level">应用</div>
-                        <div class="bloom-level highlight">分析</div>
-                        <div class="bloom-level highlight">评价</div>
-                        <div class="bloom-level">创造</div>
-                    </div>
-                    <p style="margin-top: 10px; font-size: 0.85rem;">标注的层次为当前重点培养目标</p>
+                <div class="panel-section">
+                    <h3>认知层次</h3>
+                    <p>基于布鲁姆教育目标分类学:</p>
+                    <ul>
+                        <li>记忆/理解</li>
+                        <li>应用</li>
+                        <li>分析</li>
+                        <li>评价</li>
+                        <li>创造</li>
+                    </ul>
+                    <p style="margin-top: 10px;">标注的层次为当前重点培养目标</p>
                 </div>
                 
-                <div class="info-section">
-                    <h3><i class="fas fa-cogs"></i> 系统状态</h3>
-                    <p>启智导师评价系统运行正常，已准备为您提供专业评价服务。</p>
-                    <div class="status-indicator">
-                        <div class="status-dot"></div>
-                        <span class="status-text" id="statusText">正在启动智能体...</span>
-                    </div>
+                <div class="panel-section">
+                    <h3>系统状态</h3>
+                    <p><span class="status-indicator"></span>启智导师评价系统运行正常，已准备为您提供专业评价服务。</p>
                 </div>
             </div>
             
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h2><i class="fas fa-robot"></i> 启智导师对话区</h2>
-                    <div class="chat-actions">
-                        <button class="chat-action-btn" title="使用指南" id="helpBtn">
-                            <i class="fas fa-question"></i>
-                        </button>
-                        <button class="chat-action-btn" title="刷新页面" id="refreshBtn">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                    </div>
+            <div class="content-area">
+                <div class="welcome-section">
+                    <h2>欢迎使用启智导师评价系统</h2>
+                    <p>基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学，为初中信息科技课程提供专业的学业评价与个性化成长建议。</p>
                 </div>
                 
-                <div class="coze-widget-container">
-                    <!-- 初始加载状态 -->
-                    <div id="chat-initial-state" class="chat-initial-state">
-                        <i class="fas fa-robot" style="font-size: 48px; color: var(--primary-color); margin-bottom: 15px;"></i>
-                        <h3 style="color: var(--primary-color); margin-bottom: 10px;">正在启动启智导师...</h3>
-                        <p style="color: var(--gray-medium;">智能体加载中，请稍候</p>
-                        <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary-color;"></i>
-                        </div>
-                    </div>
-                    
-                    <!-- Coze Widget 容器 -->
-                    <div id="coze-widget" class="coze-widget" style="display: none;"></div>
-                    
-                    <!-- 错误消息 -->
-                    <div id="error-message" class="error-message" style="display: none;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning-color); margin-bottom: 20px;"></i>
-                        <h3 style="color: var(--error-color); margin-bottom: 10px;">智能体加载失败</h3>
-                        <p style="color: var(--gray-medium); margin-bottom: 15px;">抱歉，评价智能体暂时无法加载。</p>
-                        <p style="color: var(--gray-medium); font-size: 0.9rem; margin-bottom: 20px;" id="error-details">可能原因：网络连接问题或配置错误</p>
-                        <button id="retryBtn" class="cta-button" style="padding: 10px 20px;">
-                            <i class="fas fa-redo"></i> 重新加载
-                        </button>
-                    </div>
+                <div class="agent-status">
+                    <p>嵌入式智能体</p>
+                    <p>点击右下角按钮与启智导师智能体对话，获取个性化评价和建议。</p>
+                </div>
+                
+                <div class="chat-hint">
+                    <p>智能体已就绪，可以开始对话</p>
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <div class="footer-content">
-                <div class="copyright">
-                    © 2023 启智导师 | 基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学
-                </div>
-                <div class="footer-links">
-                    <a href="#"><i class="fas fa-shield-alt"></i> 隐私政策</a>
-                    <a href="#"><i class="fas fa-file-contract"></i> 使用条款</a>
-                    <a href="#"><i class="fas fa-envelope"></i> 联系我们</a>
-                </div>
-            </div>
-        </footer>
     </div>
 
-    <!-- 使用更稳定的Coze SDK版本 -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/coze-web-sdk/1.0.8/lib/index.js"></script>
-    
+    <!-- Coze SDK - 添加移动端检测和备用方案 -->
     <script>
-        // 页面加载完成后自动初始化智能体
-        document.addEventListener('DOMContentLoaded', function() {
-            // 页面加载后直接初始化智能体
-            initCozeWidget();
-            
-            // 刷新按钮点击事件
-            document.getElementById('refreshBtn').addEventListener('click', function() {
-                location.reload();
-            });
-            
-            // 帮助按钮点击事件
-            document.getElementById('helpBtn').addEventListener('click', function() {
-                alert('欢迎使用启智导师评价系统！\n\n使用提示：\n1. 在对话区输入您的作业内容或问题\n2. 评价智能体会基于课程标准和布鲁姆分类学提供专业反馈\n3. 反馈包括优点肯定、提升空间和成长建议');
-            });
-            
-            // 重试按钮点击事件
-            document.getElementById('retryBtn').addEventListener('click', function() {
-                location.reload();
-            });
-        });
+        // 检测移动端
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // 移动端优化配置
+        if (isMobile) {
+            document.getElementById('mobileTips').style.display = 'block';
+            console.log('📱 移动端访问检测');
+        }
 
-        function initCozeWidget() {
-            try {
-                console.log('开始初始化Coze智能体...');
-                
-                // 更新状态提示
-                document.getElementById('statusText').textContent = '正在加载智能体...';
-                
-                // 使用正确的token和bot_id
-                const token = 'pat_fjyGEnuRL7x64YqmjkgeKbkDCuj6fHbqu1cvUuCA8opW7C02QJaMUI3EpnhBb0bX';
-                const botId = '7558025828223778835';
-                
-                if (!token || !botId) {
-                    throw new Error('Token或Bot ID未配置');
+        function loadCozeSDK() {
+            const statusEl = document.getElementById('status');
+            let sdkLoaded = false;
+            
+            // 方法1: 主要SDK源
+            const script = document.createElement('script');
+            script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
+            
+            // 移动端设置更长的超时时间
+            const timeout = isMobile ? 15000 : 10000;
+            const loadTimer = setTimeout(() => {
+                if (!sdkLoaded) {
+                    statusEl.innerHTML = '加载超时，尝试备用方案<span class="loading-dots"></span>';
+                    loadFallbackSDK();
                 }
+            }, timeout);
+
+            script.onload = function() {
+                clearTimeout(loadTimer);
+                sdkLoaded = true;
+                statusEl.innerHTML = 'SDK加载成功，初始化中<span class="loading-dots"></span>';
+                initializeCozeBot();
+            };
+
+            script.onerror = function() {
+                clearTimeout(loadTimer);
+                statusEl.innerHTML = '主要源加载失败，尝试备用方案<span class="loading-dots"></span>';
+                loadFallbackSDK();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        function loadFallbackSDK() {
+            // 备用SDK源
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
+            
+            fallbackScript.onload = function() {
+                document.getElementById('status').innerHTML = '备用SDK加载成功，初始化中<span class="loading-dots"></span>';
+                initializeCozeBot();
+            };
+
+            fallbackScript.onerror = function() {
+                document.getElementById('status').innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
+            };
+
+            document.head.appendChild(fallbackScript);
+        }
+
+        function initializeCozeBot() {
+            try {
+                const token = 'pat_fjyGEnuRL7x64YqmjkgeKbkDCuj6fHbqu1cvUuCA8opW7C02QJaMUI3EpnhBb0bX'; // 替换为您的真实token
                 
-                // 创建Coze客户端 - 使用新的初始化方法
-                const cozeClient = window.CozeWebSDK.init({
+                const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
-                        bot_id: botId,
-                        token: token
+                        bot_id: '7558025828223778835',
                     },
-                    componentProps: {
-                        title: '启智导师 - 评价智能体',
-                        // 可以添加更多UI配置
-                        welcome_message: '您好！我是启智导师，基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学，为您提供专业的学业评价服务。',
-                        input_placeholder: '请输入您的作业内容或问题...'
+                    auth: {
+                        type: 'token',
+                        token: token,
+                        onRefreshToken: function() {
+                            return token;
+                        }
+                    },
+                    userInfo: {
+                        id: 'user_' + Math.random().toString(36).substr(2, 9),
+                        nickname: isMobile ? '移动用户' : '网页用户'
+                    },
+                    ui: {
+                        asstBtn: {
+                            isNeed: true,
+                            color: '#667eea',
+                            size: isMobile ? 'medium' : 'large'
+                        },
+                        chatBot: {
+                            title: '启智导师 - 评价智能体',
+                            welcome: '您好！我是启智导师，很高兴为您服务。'
+                        }
                     }
                 });
 
-                // 检查是否成功创建客户端
-                if (!cozeClient) {
-                    throw new Error('无法创建Coze客户端');
-                }
+                document.getElementById('status').innerHTML = '✅ 智能体加载完成！请点击右下角图标开始对话';
                 
-                const widgetContainer = document.getElementById('coze-widget');
-                if (widgetContainer) {
-                    // 隐藏初始状态和错误消息
-                    document.getElementById('chat-initial-state').style.display = 'none';
-                    document.getElementById('error-message').style.display = 'none';
-                    
-                    // 使用mount方法将智能体挂载到容器
-                    cozeClient.mount(widgetContainer);
-                    widgetContainer.style.display = 'block';
-                    
-                    console.log('Coze智能体已成功加载并嵌入到页面中');
-                    document.getElementById('statusText').textContent = '智能体已就绪 - 可以开始对话';
+                // 移动端特殊处理
+                if (isMobile) {
+                    setTimeout(() => {
+                        const tips = document.createElement('div');
+                        tips.innerHTML = '💡 提示：如果图标不显示，请尝试上下滑动页面';
+                        tips.style.cssText = 'font-size:12px; color:#666; margin-top:10px;';
+                        document.getElementById('status').appendChild(tips);
+                    }, 2000);
                 }
-                
+
             } catch (error) {
-                console.error('加载Coze智能体时出错:', error);
-                showErrorMessage(error.message);
+                document.getElementById('status').innerHTML = '❌ 初始化失败: ' + error.message;
             }
         }
-        
-        function showErrorMessage(errorMsg) {
-            document.getElementById('chat-initial-state').style.display = 'none';
-            document.getElementById('coze-widget').style.display = 'none';
-            document.getElementById('error-message').style.display = 'flex';
-            document.getElementById('error-details').textContent = '错误详情: ' + errorMsg;
-            document.getElementById('statusText').textContent = '智能体加载失败';
-        }
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            // 移动端延迟加载，提高成功率
+            if (isMobile) {
+                setTimeout(loadCozeSDK, 500);
+            } else {
+                loadCozeSDK();
+            }
+        });
     </script>
 </body>
 </html>
