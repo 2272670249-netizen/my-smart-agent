@@ -2,66 +2,142 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>启智导师 - 评价智能体</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HW_Smart_Agent</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow-x: hidden;
         }
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 30px;
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             text-align: center;
+            backdrop-filter: blur(10px);
         }
         h1 {
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 24px;
+            font-weight: 600;
         }
-        .status {
+        .mobile-status {
             background: #e8f5e9;
             border: 1px solid #4caf50;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 15px;
             margin: 20px 0;
             color: #2e7d32;
+            font-size: 14px;
+        }
+        .loading-dots:after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        /* 移动端触摸优化 */
+        .container {
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎯 启智导师 - 评价智能体</h1>
-        <div class="status">
-            ✅ 智能体已成功加载！请查看右下角聊天图标
+        <h1>🎯 HW Smart Agent</h1>
+        <div id="status" class="mobile-status">
+            正在加载智能体<span class="loading-dots"></span>
         </div>
-        <p>如果图标未显示，请刷新页面或检查浏览器控制台</p>
+        <div id="mobileTips" style="font-size: 12px; color: #666; margin-top: 15px; display: none;">
+            📱 移动端优化已启用 | 如果加载缓慢请耐心等待
+        </div>
     </div>
 
-    <!-- Coze SDK -->
-    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
-    
+    <!-- Coze SDK - 添加移动端检测和备用方案 -->
     <script>
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 替换为您的真实token
-            const token = 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX';
+        // 检测移动端
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // 移动端优化配置
+        if (isMobile) {
+            document.getElementById('mobileTips').style.display = 'block';
+            console.log('📱 移动端访问检测');
+        }
+
+        function loadCozeSDK() {
+            const statusEl = document.getElementById('status');
+            let sdkLoaded = false;
             
+            // 方法1: 主要SDK源
+            const script = document.createElement('script');
+            script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
+            
+            // 移动端设置更长的超时时间
+            const timeout = isMobile ? 15000 : 10000;
+            const loadTimer = setTimeout(() => {
+                if (!sdkLoaded) {
+                    statusEl.innerHTML = '加载超时，尝试备用方案<span class="loading-dots"></span>';
+                    loadFallbackSDK();
+                }
+            }, timeout);
+
+            script.onload = function() {
+                clearTimeout(loadTimer);
+                sdkLoaded = true;
+                statusEl.innerHTML = 'SDK加载成功，初始化中<span class="loading-dots"></span>';
+                initializeCozeBot();
+            };
+
+            script.onerror = function() {
+                clearTimeout(loadTimer);
+                statusEl.innerHTML = '主要源加载失败，尝试备用方案<span class="loading-dots"></span>';
+                loadFallbackSDK();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        function loadFallbackSDK() {
+            // 备用SDK源
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
+            
+            fallbackScript.onload = function() {
+                document.getElementById('status').innerHTML = '备用SDK加载成功，初始化中<span class="loading-dots"></span>';
+                initializeCozeBot();
+            };
+
+            fallbackScript.onerror = function() {
+                document.getElementById('status').innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
+            };
+
+            document.head.appendChild(fallbackScript);
+        }
+
+        function initializeCozeBot() {
             try {
-                // 初始化Coze智能体 - 关键修复：添加onRefreshToken
+                const token = 'pat_iqDSBzSYUIOn9Crgna838VghoALGsD34HzAICrsZ3X5mL4dJ8ofsFxmWCYmqaqxX'; // 替换为您的真实token
+                
                 const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
                         bot_id: '7578063729297145899',
@@ -69,56 +145,52 @@
                     auth: {
                         type: 'token',
                         token: token,
-                        // 关键修复：添加必需的onRefreshToken回调
                         onRefreshToken: function() {
-                            console.log('Token刷新回调被调用');
-                            // 返回一个新的token或当前的token
                             return token;
                         }
                     },
                     userInfo: {
                         id: 'user_' + Math.random().toString(36).substr(2, 9),
-                        nickname: '启智导师用户'
+                        nickname: isMobile ? '移动用户' : '网页用户'
                     },
                     ui: {
                         asstBtn: {
                             isNeed: true,
                             color: '#667eea',
-                            size: 'large'
+                            size: isMobile ? 'medium' : 'large'
                         },
                         chatBot: {
-                            title: '启智导师 - 评价智能体',
-                            welcome: '您好！我是启智导师，很高兴为您提供学习评价和指导。'
+                            title: 'HW-Smart-Agent',
+                            welcome: '您好！很高兴为您服务。'
                         }
                     }
                 });
 
-                console.log('✅ 智能体初始化成功完成');
-
-                // 强制显示悬浮按钮的备用方案
-                setTimeout(function() {
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        .coze-asst-btn, [class*="asst-btn"], [class*="assistant"] {
-                            display: block !important;
-                            opacity: 1 !important;
-                            visibility: visible !important;
-                            z-index: 99999 !important;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
-                    console.log('✅ 悬浮按钮样式已注入');
-                }, 2000);
+                document.getElementById('status').innerHTML = '✅ 智能体加载完成！请点击右下角图标开始对话';
+                
+                // 移动端特殊处理
+                if (isMobile) {
+                    setTimeout(() => {
+                        const tips = document.createElement('div');
+                        tips.innerHTML = '💡 提示：如果图标不显示，请尝试上下滑动页面';
+                        tips.style.cssText = 'font-size:12px; color:#666; margin-top:10px;';
+                        document.getElementById('status').appendChild(tips);
+                    }, 2000);
+                }
 
             } catch (error) {
-                console.error('❌ 初始化失败:', error);
+                document.getElementById('status').innerHTML = '❌ 初始化失败: ' + error.message;
             }
-        });
+        }
 
-        // 全局错误处理
-        window.addEventListener('error', function(e) {
-            console.error('全局错误:', e.error);
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            // 移动端延迟加载，提高成功率
+            if (isMobile) {
+                setTimeout(loadCozeSDK, 500);
+            } else {
+                loadCozeSDK();
+            }
         });
     </script>
 </body>
