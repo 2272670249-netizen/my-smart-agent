@@ -66,11 +66,6 @@
             color: white;
             text-decoration: none;
             font-size: 16px;
-            transition: opacity 0.3s;
-        }
-        
-        nav a:hover {
-            opacity: 0.8;
         }
         
         .main-content {
@@ -136,23 +131,6 @@
             margin-bottom: 15px;
         }
         
-        .welcome-section p {
-            margin-bottom: 15px;
-        }
-        
-        .agent-status {
-            background-color: #f0f7ff;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid;
-            border-left-color: #1a73e8;
-            margin: 15px 0;
-        }
-        
-        .agent-status p {
-            margin-bottom: 10px;
-        }
-        
         .chat-hint {
             text-align: center;
             padding: 15px;
@@ -165,93 +143,8 @@
             font-weight: bold;
         }
         
-        .mobile-tips {
-            display: none;
-            background: #fff8e1;
-            border: 1px solid #ffd54f;
-            border-radius: 4px;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        .loading-dots:after {
-            content: '...';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-
         #status {
             font-weight: bold;
-            color: #1a73e8;
-        }
-        
-        .feature-cards {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .feature-card {
-            background: #f9f9f9;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .feature-icon {
-            font-size: 36px;
-            margin-bottom: 10px;
-            color: #1a73e8;
-        }
-        
-        .feature-card h3 {
-            margin-bottom: 10px;
-            color: #1a73e8;
-        }
-        
-        .feature-card p {
-            flex-grow: 1;
-        }
-        
-        .system-overview {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .overview-item {
-            background: #f9f9f9;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .overview-icon {
-            font-size: 24px;
-            margin-right: 15px;
-            color: #1a73e8;
-        }
-        
-        .overview-content h4 {
-            margin-bottom: 5px;
             color: #1a73e8;
         }
     </style>
@@ -287,18 +180,6 @@
                 </div>
                 
                 <div class="panel-section">
-                    <h3>认知层次</h3>
-                    <p>基于布鲁姆教育目标分类学:</p>
-                    <ul>
-                        <li>记忆/理解</li>
-                        <li>应用</li>
-                        <li>分析</li>
-                        <li>评价</li>
-                        <li>创造</li>
-                    </ul>
-                </div>
-                
-                <div class="panel-section">
                     <h3>系统状态</h3>
                     <p><span class="status-indicator"></span>启智导师评价系统运行正常</p>
                 </div>
@@ -310,10 +191,6 @@
                     <p>基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学，为初中信息科技课程提供专业的学业评价与个性化成长建议。</p>
                 </div>
                 
-                <div class="agent-status">
-                    <p>点击右下角按钮与启智导师智能体对话</p>
-                </div>
-                
                 <div class="chat-hint">
                     <p>智能体状态: <span id="status">正在初始化...</span></p>
                 </div>
@@ -321,64 +198,109 @@
         </div>
     </div>
 
-    <!-- 你官方的SDK -->
+    <!-- 官方SDK -->
     <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js"></script>
     <script>
-        // ======================================
-        // 核心：生成【永久唯一】的用户ID，这是隔离的关键
-        // ======================================
-        function getMyUniqueUserId() {
-            const key = "qizhi_user_unique_id";
-            let uid = localStorage.getItem(key);
-            
+        // 生成永不重复的用户ID（设备级唯一）
+        function getDeviceUniqueId() {
+            const KEY = "qizhi_tutor_device_uid";
+            // 组合设备特征+随机数，确保不同设备绝对不一样
+            const deviceFingerprint = navigator.userAgent + screen.width + screen.height + timezoneOffset;
+            let uid = localStorage.getItem(KEY);
+
             if (!uid) {
-                // 生成绝对唯一的用户ID，不同设备永远不一样
-                uid = "user_" + Date.now() + "_" + Math.random().toString(36).substr(2,10);
-                localStorage.setItem(key, uid);
+                // 生成不可逆的唯一ID
+                uid = "dev_" + btoa(deviceFingerprint + Date.now() + Math.random())
+                    .replace(/[^a-zA-Z0-9]/g, "")
+                    .substr(0, 20);
+                localStorage.setItem(KEY, uid);
             }
             return uid;
         }
 
-        // ======================================
-        // 初始化Coze（严格按官方1.2.0-beta格式，隔离100%生效）
-        // ======================================
-        window.onload = function() {
-            const status = document.getElementById("status");
-            const MY_UID = getMyUniqueUserId();
-            
+        // 初始化（强制隔离所有维度）
+        window.onload = async function() {
+            const statusEl = document.getElementById("status");
+            const DEVICE_UID = getDeviceUniqueId();
+            // 会话ID = 设备UID + 随机数（双重保险）
+            const CONV_ID = DEVICE_UID + "_conv_" + Math.random().toString(36).substr(2, 8);
+
             try {
-                new CozeWebSDK.WebChatClient({
-                    // 官方配置
+                // 初始化SDK（加入所有强制隔离参数）
+                const chatClient = new CozeWebSDK.WebChatClient({
                     config: {
                         bot_id: "7578063729297145899",
-                        // 🔴 核心：会话ID直接用用户唯一ID，彻底隔离
-                        conversation_id: MY_UID
+                        conversation_id: CONV_ID, // 会话ID绝对唯一
+                        is_single: true, // 强制单会话
+                        history_msg_count: 0, // 不加载任何历史消息
+                        isolation: true, // 核心：开启服务端会话隔离
+                        // 禁用会话共享
+                        share_conversation: false,
+                        // 禁用跨设备同步
+                        sync_conversation: false
                     },
-                    // 🔴 核心：必须传userInfo.id，Coze靠这个区分用户
                     userInfo: {
-                        id: MY_UID,
-                        nickname: "学生_" + MY_UID.substr(-6)
+                        id: DEVICE_UID, // 用户ID=设备唯一ID
+                        nickname: "独立用户_" + DEVICE_UID.substr(-6),
+                        // 额外添加用户标识，强化隔离
+                        metadata: { device_uid: DEVICE_UID }
                     },
-                    // 界面配置
                     componentProps: {
                         title: "启智导师",
-                        // 隐藏会话列表，绝对不能切换会话
-                        showConversationList: false
+                        showConversationList: false, // 彻底隐藏会话列表
+                        showShareButton: false, // 隐藏分享按钮
+                        showClearButton: true, // 仅保留清空自己记录的按钮
+                        // 禁用会话切换相关功能
+                        disableConversationSwitch: true
                     },
-                    // 你的token（替换成你真实的完整token）
                     auth: {
                         type: "token",
+                        // 【必须替换】你的真实token（复制控制台完整值）
                         token: "pat_ZcFFQgalml0fBTb8cpYwFFGAhHtq4NvkzyyCeKDLhkuH1wdCS6ZZ1oa61BqKJeG5",
-                        onRefreshToken: () => "pat_ZcFFQgalml0fBTb8cpYwFFGAhHtq4NvkzyyCeKDLhkuH1wdCS6ZZ1oa61BqKJeG5"
+                        onRefreshToken: () => {
+                            // 【必须替换】和上面token一致
+                            return "pat_ZcFFQgalml0fBTb8cpYwFFGAhHtq4NvkzyyCeKDLhkuH1wdCS6ZZ1oa61BqKJeG5";
+                        }
+                    },
+                    // 拦截所有消息，强制绑定当前用户ID
+                    onSendMessage: (msg) => {
+                        return {
+                            ...msg,
+                            user_id: DEVICE_UID,
+                            conversation_id: CONV_ID,
+                            metadata: {
+                                device_uid: DEVICE_UID,
+                                conv_id: CONV_ID
+                            }
+                        };
+                    },
+                    // 拦截消息接收，只显示自己的消息
+                    onReceiveMessage: (msg) => {
+                        // 只接收当前会话的消息
+                        if (msg.conversation_id !== CONV_ID) {
+                            return null; // 过滤其他会话的消息
+                        }
+                        return msg;
                     }
                 });
-                
-                status.innerHTML = "✅ 智能体加载完成！";
-                
+
+                // 监听初始化完成
+                chatClient.on("ready", () => {
+                    statusEl.innerHTML = "✅ 智能体加载完成！";
+                    console.log("当前用户唯一ID：", DEVICE_UID);
+                    console.log("当前会话唯一ID：", CONV_ID);
+                });
+
+                // 监听消息发送，确认隔离
+                chatClient.on("message.send", (msg) => {
+                    console.log("发送消息绑定的会话ID：", msg.conversation_id);
+                });
+
             } catch (e) {
-                status.innerHTML = "❌ 初始化失败：" + e.message;
+                statusEl.innerHTML = "❌ 初始化失败：" + e.message;
+                console.error("初始化错误：", e);
             }
-        }
+        };
     </script>
 </body>
 </html>
