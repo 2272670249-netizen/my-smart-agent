@@ -3,625 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>启智导师 - 信息科技学业评价智能体</title>
+    <title>扣子智能体 - 会话隔离测试</title>
     <style>
-        /* 原有的所有样式保持不变，只添加以下样式 */
-        
-        /* 确保Coze悬浮按钮容器正常显示 */
-        .coze-web-sdk-wrapper {
-            z-index: 9999 !important;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
-        
-        /* 防止与其他元素冲突 */
-        #coze-chat-container {
-            position: fixed !important;
-            bottom: 20px !important;
-            right: 20px !important;
-            z-index: 10000 !important;
+        .chat-wrapper {
+            max-width: 800px;
+            margin: 20px auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
-        /* 确保页面层级正确 */
-        body {
-            position: relative;
-            overflow-x: hidden;
+        .chat-header {
+            background-color: #4096ff;
+            color: white;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .chat-history {
+            height: 500px;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 12px;
+            max-width: 80%;
+            clear: both;
+        }
+        .user-message {
+            float: right;
+        }
+        .ai-message {
+            float: left;
+        }
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+        }
+        .user-message .message-content {
+            background-color: #4096ff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-message .message-content {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-area {
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        #message-input:focus {
+            border-color: #4096ff;
+        }
+        #send-btn {
+            padding: 12px 25px;
+            background-color: #4096ff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        #send-btn:hover {
+            background-color: #337ecc;
+        }
+        #send-btn:disabled {
+            background-color: #b3d4fc;
+            cursor: not-allowed;
+        }
+        .session-info {
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #666;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .error-tip {
+            color: #ff4d4f;
+            font-size: 12px;
+            padding: 5px 15px;
+            background-color: #fff2f0;
+            border-bottom: 1px solid #ffccc7;
         }
     </style>
-    <!-- 原有的所有CSS样式保持不变 -->
 </head>
 <body>
-    <div class="container">
-        <!-- 原有的所有HTML结构保持不变 -->
-        
-        <!-- 添加Coze悬浮按钮的专用容器 -->
-        <div id="coze-chat-container"></div>
+    <div class="chat-wrapper">
+        <div class="chat-header">扣子智能体 - 会话隔离测试</div>
+        <div class="session-info">当前会话ID：<span id="session-id"></span></div>
+        <div class="error-tip" id="error-tip" style="display: none;">
+            令牌校验失败！请检查API令牌是否正确，或参考<a href="https://coze.com/docs/developer_guides/authentication" target="_blank">扣子认证文档</a>
+        </div>
+        <div class="chat-history" id="chat-history"></div>
+        <div class="chat-input-area">
+            <input type="text" id="message-input" placeholder="请输入你的问题..." autocomplete="off">
+            <button id="send-btn">发送</button>
+        </div>
     </div>
 
-    <!-- 会话管理和Coze SDK脚本 -->
     <script>
-        // ========== 会话管理系统 ==========
-        class SessionManager {
-            constructor() {
-                this.STORAGE_KEY = 'eduai_session_v4';
-                this.session = null;
-                this.initSession();
-                this.updateSessionDisplay();
-                this.bindEvents();
-            }
-
-            initSession() {
-                // 检查是否有现有会话
-                let savedSession = localStorage.getItem(this.STORAGE_KEY);
-                
-                if (savedSession) {
-                    try {
-                        this.session = JSON.parse(savedSession);
-                        // 检查会话是否过期（24小时）
-                        const now = new Date().getTime();
-                        const created = new Date(this.session.createdAt).getTime();
-                        if (now - created > 24 * 60 * 60 * 1000) {
-                            // 会话过期，创建新会话
-                            this.createNewSession();
-                        } else {
-                            // 更新最后活动时间
-                            this.session.lastActive = new Date().toISOString();
-                            this.saveSession();
-                        }
-                    } catch (e) {
-                        console.error('解析会话数据失败，创建新会话', e);
-                        this.createNewSession();
-                    }
-                } else {
-                    this.createNewSession();
-                }
-            }
-
-            createNewSession() {
-                const deviceId = this.generateDeviceId();
-                const userId = this.generateUserId();
-                const sessionId = this.generateSessionId();
-                
-                this.session = {
-                    userId: userId,
-                    sessionId: sessionId,
-                    deviceId: deviceId,
-                    deviceType: this.getDeviceType(),
-                    createdAt: new Date().toISOString(),
-                    lastActive: new Date().toISOString(),
-                    userAgent: navigator.userAgent.substring(0, 100)
-                };
-                
-                this.saveSession();
-            }
-
-            generateDeviceId() {
-                // 生成设备唯一ID
-                const navigatorInfo = [
-                    navigator.userAgent,
-                    navigator.language,
-                    navigator.hardwareConcurrency,
-                    screen.width,
-                    screen.height,
-                    screen.colorDepth,
-                    new Date().getTimezoneOffset()
-                ].join('|');
-                
-                let hash = 0;
-                for (let i = 0; i < navigatorInfo.length; i++) {
-                    const char = navigatorInfo.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
-                }
-                
-                return `device_${Math.abs(hash).toString(36)}`;
-            }
-
-            generateUserId() {
-                const timestamp = Date.now();
-                const random = Math.random().toString(36).substr(2, 12);
-                return `user_${timestamp}_${random}`;
-            }
-
-            generateSessionId() {
-                return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            }
-
-            getDeviceType() {
-                const ua = navigator.userAgent;
-                if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
-                    return '移动设备';
-                } else if (/Mac|Win|Linux/.test(ua)) {
-                    return '桌面设备';
-                }
-                return '未知设备';
-            }
-
-            saveSession() {
-                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.session));
-            }
-
-            clearSession() {
-                localStorage.removeItem(this.STORAGE_KEY);
-                this.createNewSession();
-                this.updateSessionDisplay();
-                alert('会话已重置，正在重新初始化...');
-                location.reload();
-            }
-
-            refreshSession() {
-                this.session.sessionId = this.generateSessionId();
-                this.session.lastActive = new Date().toISOString();
-                this.saveSession();
-                this.updateSessionDisplay();
-                alert('已刷新会话ID，当前对话将重新开始');
-                location.reload();
-            }
-
-            updateSessionDisplay() {
-                const sessionIdEl = document.getElementById('sessionId');
-                const sessionTimeEl = document.getElementById('sessionTime');
-                const deviceTypeEl = document.getElementById('deviceType');
-                const userSessionInfoEl = document.getElementById('userSessionInfo');
-                
-                if (this.session && sessionIdEl) {
-                    const shortSessionId = this.session.sessionId.substring(0, 16) + '...';
-                    sessionIdEl.textContent = shortSessionId;
-                    sessionTimeEl.textContent = new Date(this.session.createdAt).toLocaleString();
-                    deviceTypeEl.textContent = this.session.deviceType;
-                    
-                    if (userSessionInfoEl) {
-                        userSessionInfoEl.textContent = `当前会话：${this.session.deviceType} - ${shortSessionId}`;
-                    }
-                }
-            }
-
-            bindEvents() {
-                const refreshBtn = document.getElementById('refreshSession');
-                const clearBtn = document.getElementById('clearSession');
-                
-                if (refreshBtn) {
-                    refreshBtn.addEventListener('click', () => {
-                        if (confirm('刷新会话将开始新的对话，但保留用户ID，确定继续吗？')) {
-                            this.refreshSession();
-                        }
-                    });
-                }
-                
-                if (clearBtn) {
-                    clearBtn.addEventListener('click', () => {
-                        if (confirm('清除所有会话数据将删除所有聊天记录，确定继续吗？')) {
-                            this.clearSession();
-                        }
-                    });
-                }
-            }
-        }
-
-        // ========== 全局状态管理 ==========
-        let cozeClient = null;
-        let cozeSDKLoaded = false;
-        let initializationAttempted = false;
-
-        // ========== Coze SDK 初始化 ==========
-        function initializeCoze() {
-            const statusEl = document.getElementById('status');
-            if (!statusEl || initializationAttempted) {
-                return; // 防止重复初始化
-            }
-            
-            initializationAttempted = true;
-            
-            try {
-                // 初始化会话管理器
-                const sessionManager = new SessionManager();
-                const session = sessionManager.session;
-
-                // 检查SDK是否加载
-                if (typeof window.CozeWebSDK === 'undefined') {
-                    console.warn('CozeWebSDK未定义，等待加载...');
-                    statusEl.innerHTML = '正在加载SDK...<span class="loading-dots"></span>';
-                    setTimeout(initializeCoze, 1000); // 1秒后重试
-                    initializationAttempted = false;
-                    return;
-                }
-
-                // 生成唯一的用户标识
-                const userIdentifier = `${session.userId}_${session.deviceId}`;
-                
-                console.log('开始初始化Coze智能体，用户ID:', userIdentifier);
-                
-                // 清理可能存在的旧实例
-                if (window.cozeClientInstance) {
-                    try {
-                        window.cozeClientInstance.destroy && window.cozeClientInstance.destroy();
-                    } catch (e) {
-                        console.warn('清理旧实例失败:', e);
-                    }
-                    window.cozeClientInstance = null;
-                }
-                
-                // 确保有容器元素
-                let container = document.getElementById('coze-chat-container');
-                if (!container) {
-                    container = document.createElement('div');
-                    container.id = 'coze-chat-container';
-                    document.body.appendChild(container);
-                    console.log('创建了Coze容器元素');
-                }
-                
-                // 检查容器是否在DOM中
-                if (!document.body.contains(container)) {
-                    document.body.appendChild(container);
-                }
-                
-                // Coze SDK配置
-                const config = {
-                    config: {
-                        bot_id: '7558025828223778835',
-                    },
-                    component: {
-                        layout: {
-                            type: 'full' // 使用完整布局
-                        },
-                        theme: {
-                            primary: "#1a73e8",
-                            assistant_message_bg_color: "#e8f0fe",
-                            assistant_message_text_color: "#202124",
-                            user_message_bg_color: "#1a73e8",
-                            user_message_text_color: "#ffffff",
-                            launcher_color: "#1a73e8",
-                            launcher_position: {
-                                bottom: '20px',
-                                right: '20px'
-                            }
-                        },
-                        launcher: {
-                            is_show: true, // 确保显示悬浮按钮
-                            default_open: false
-                        }
-                    },
-                    auth: {
-                        type: 'token',
-                        token: 'pat_HQnW8V3BobW63uKj8qWTQ0DORkpiYKETyOGE45UiVrFZUv1clpbrPDcoasX8LJY1',
-                    },
-                    user: {
-                        user_id: userIdentifier,
-                        user_name: `学生_${session.userId.substring(8, 16)}`,
-                        user_avatar: '',
-                        custom_info: {
-                            device_type: session.deviceType,
-                            session_id: session.sessionId,
-                            created_at: session.createdAt
-                        }
-                    }
-                };
-
-                // 尝试不同的初始化方法
-                try {
-                    // 方法1: 使用新版API
-                    if (typeof window.CozeWebSDK.create === 'function') {
-                        console.log('使用CozeWebSDK.create()初始化');
-                        cozeClient = window.CozeWebSDK.create(config);
-                    } 
-                    // 方法2: 使用init方法
-                    else if (typeof window.CozeWebSDK.init === 'function') {
-                        console.log('使用CozeWebSDK.init()初始化');
-                        cozeClient = window.CozeWebSDK.init(config);
-                    }
-                    // 方法3: 直接调用
-                    else if (typeof window.CozeWebSDK === 'function') {
-                        console.log('使用window.CozeWebSDK()直接初始化');
-                        cozeClient = window.CozeWebSDK(config);
-                    }
-                    // 方法4: 尝试默认导出
-                    else if (window.CozeWebSDK.default) {
-                        console.log('使用CozeWebSDK.default初始化');
-                        const SDK = window.CozeWebSDK.default;
-                        if (typeof SDK.create === 'function') {
-                            cozeClient = SDK.create(config);
-                        } else if (typeof SDK.init === 'function') {
-                            cozeClient = SDK.init(config);
-                        } else if (typeof SDK === 'function') {
-                            cozeClient = SDK(config);
-                        } else {
-                            throw new Error('无法识别的SDK格式');
-                        }
-                    }
-                    else {
-                        throw new Error('未找到可用的Coze SDK初始化方法');
-                    }
-
-                    // 等待SDK完全初始化
-                    setTimeout(() => {
-                        // 检查按钮是否被创建
-                        checkForChatButton();
-                    }, 2000);
-
-                    // 存储到全局变量
-                    window.cozeClientInstance = cozeClient;
-                    
-                    // 更新状态显示
-                    statusEl.innerHTML = '✅ 智能体加载完成！右下角应显示悬浮按钮';
-                    cozeSDKLoaded = true;
-                    
-                    console.log('Coze智能体初始化成功');
-                    
-                    // 如果10秒后按钮还没出现，显示手动引导
-                    setTimeout(() => {
-                        checkForChatButton();
-                    }, 10000);
-
-                } catch (error) {
-                    console.error('Coze初始化错误:', error);
-                    statusEl.innerHTML = '❌ 初始化失败: ' + error.message;
-                    showFallbackChatInterface();
-                }
-
-            } catch (error) {
-                console.error('初始化Coze时出错:', error);
-                statusEl.innerHTML = '❌ 初始化失败: ' + error.message;
-                showFallbackChatInterface();
-            }
-        }
-
-        // ========== 检查聊天按钮是否存在 ==========
-        function checkForChatButton() {
-            // 查找Coze创建的按钮元素
-            const cozeButtons = document.querySelectorAll('[class*="coze"], [class*="Coze"], [id*="coze"], [id*="Coze"]');
-            const cozeIframes = document.querySelectorAll('iframe');
-            
-            console.log('检查Coze按钮元素:');
-            console.log('Coze相关元素:', cozeButtons.length);
-            console.log('iframe数量:', cozeIframes.length);
-            
-            if (cozeButtons.length > 0 || cozeIframes.length > 0) {
-                console.log('✅ 检测到Coze元素');
-                return true;
-            }
-            
-            // 如果没找到，显示手动引导
-            const statusEl = document.getElementById('status');
-            if (statusEl && statusEl.innerHTML.includes('✅')) {
-                const guideDiv = document.createElement('div');
-                guideDiv.style.cssText = `
-                    background: #fff3cd;
-                    border: 1px solid #ffeaa7;
-                    border-radius: 4px;
-                    padding: 10px;
-                    margin-top: 10px;
-                    font-size: 14px;
-                    color: #856404;
-                `;
-                guideDiv.innerHTML = `
-                    <p><strong>💡 如果没看到悬浮按钮：</strong></p>
-                    <ol style="margin-left: 20px; margin-top: 5px;">
-                        <li>尝试滚动页面到底部</li>
-                        <li>检查浏览器是否拦截了弹窗</li>
-                        <li>尝试刷新页面</li>
-                    </ol>
-                `;
-                statusEl.appendChild(guideDiv);
-            }
-            
-            return false;
-        }
-
-        // ========== 改进的SDK加载函数 ==========
-        function loadCozeSDK() {
-            const statusEl = document.getElementById('status');
-            if (!statusEl) return;
-
-            // 先初始化会话管理器
-            const sessionManager = new SessionManager();
-
-            // 检测移动端
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            if (isMobile) {
-                const mobileTips = document.getElementById('mobileTips');
-                if (mobileTips) {
-                    mobileTips.style.display = 'block';
-                }
-            }
-
-            // 检查是否已加载SDK
-            if (window.CozeWebSDK) {
-                console.log('SDK已加载，直接初始化');
-                initializeCoze();
-                return;
-            }
-
-            let sdkLoaded = false;
-            
-            // 尝试多个SDK源
-            const sdkSources = [
-                'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js', // 官方源1
-                'https://lf-cdn.coze.cn/obj/unpkg/coze-web-sdk/coze-sdk.min.js', // 官方源2
-                'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js' // 备用源
-            ];
-            
-            function tryLoadSDK(sourceIndex = 0) {
-                if (sourceIndex >= sdkSources.length) {
-                    statusEl.innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
-                    showFallbackChatInterface();
-                    return;
-                }
-                
-                const script = document.createElement('script');
-                script.src = sdkSources[sourceIndex];
-                script.crossOrigin = 'anonymous';
-                
-                statusEl.innerHTML = `正在加载SDK...<span class="loading-dots"></span>`;
-                
-                const timeout = 15000; // 15秒超时
-                const loadTimer = setTimeout(() => {
-                    if (!sdkLoaded) {
-                        script.remove();
-                        console.warn(`SDK源 ${sdkSources[sourceIndex]} 加载超时，尝试下一个`);
-                        tryLoadSDK(sourceIndex + 1);
-                    }
-                }, timeout);
-
-                script.onload = function() {
-                    clearTimeout(loadTimer);
-                    sdkLoaded = true;
-                    cozeSDKLoaded = true;
-                    console.log(`✅ SDK加载成功: ${sdkSources[sourceIndex]}`);
-                    
-                    // 等待SDK完全初始化
-                    setTimeout(() => {
-                        if (window.CozeWebSDK) {
-                            statusEl.innerHTML = 'SDK加载成功，正在初始化用户会话<span class="loading-dots"></span>';
-                            initializeCoze();
-                        } else {
-                            console.error('SDK加载但未定义，尝试下一个源');
-                            tryLoadSDK(sourceIndex + 1);
-                        }
-                    }, 500);
-                };
-
-                script.onerror = function() {
-                    clearTimeout(loadTimer);
-                    console.warn(`❌ SDK源 ${sdkSources[sourceIndex]} 加载失败`);
-                    tryLoadSDK(sourceIndex + 1);
-                };
-
-                document.head.appendChild(script);
-            }
-            
-            // 开始加载第一个SDK源
-            tryLoadSDK(0);
-        }
-
-        // ========== 备用聊天界面 ==========
-        function showFallbackChatInterface() {
-            const fallbackHTML = `
-                <div class="panel-section" style="background: #fff8e1; border-left: 4px solid #ff9800; margin-top: 20px;">
-                    <h3 style="color: #ff9800;">备用聊天界面</h3>
-                    <p>Coze智能体暂时不可用，请尝试：</p>
-                    <ol style="margin-left: 20px; margin-top: 10px;">
-                        <li>刷新页面重新加载</li>
-                        <li>检查浏览器是否屏蔽了悬浮按钮</li>
-                        <li>允许页面显示弹窗和悬浮元素</li>
-                        <li>联系技术支持</li>
-                    </ol>
-                    <button onclick="window.location.reload()" style="
-                        background: #1a73e8;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        margin-top: 15px;
-                    ">重新加载</button>
-                </div>
-            `;
-            
-            const contentArea = document.querySelector('.content-area');
-            if (contentArea) {
-                contentArea.insertAdjacentHTML('beforeend', fallbackHTML);
-            }
-        }
-
-        // ========== 手动显示悬浮按钮（备用方案） ==========
-        function createManualChatButton() {
-            // 如果SDK加载失败，创建手动按钮
-            const manualButton = document.createElement('button');
-            manualButton.id = 'manual-coze-button';
-            manualButton.innerHTML = '💬';
-            manualButton.style.cssText = `
-                position: fixed;
-                bottom: 30px;
-                right: 30px;
-                width: 60px;
-                height: 60px;
-                background-color: #1a73e8;
-                border: none;
-                border-radius: 50%;
-                color: white;
-                font-size: 24px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            `;
-            
-            manualButton.addEventListener('click', function() {
-                alert('Coze智能体加载失败，请刷新页面或检查网络连接。');
-            });
-            
-            document.body.appendChild(manualButton);
-            
-            // 添加悬停效果
-            manualButton.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.1)';
-                this.style.backgroundColor = '#a9c8f5';
-            });
-            
-            manualButton.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-                this.style.backgroundColor = '#1a73e8';
-            });
-        }
-
-        // ========== 页面加载 ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 页面加载完成，开始初始化个性化会话系统');
-            
-            // 先创建会话管理器
-            const sessionManager = new SessionManager();
-            
-            // 延迟加载SDK，确保DOM完全加载
-            setTimeout(() => {
-                loadCozeSDK();
-                
-                // 10秒后检查SDK是否加载成功
-                setTimeout(() => {
-                    if (!cozeSDKLoaded && !window.CozeWebSDK) {
-                        console.warn('SDK加载超时，显示备用方案');
-                        const statusEl = document.getElementById('status');
-                        if (statusEl) {
-                            statusEl.innerHTML = '⚠️ SDK加载较慢，尝试备用方案...';
-                        }
-                        createManualChatButton();
-                    }
-                }, 10000);
-            }, 1000);
-        });
-
-        // ========== 错误处理 ==========
-        window.addEventListener('error', function(e) {
-            console.error('全局错误:', e.error);
-            const statusEl = document.getElementById('status');
-            if (statusEl) {
-                statusEl.innerHTML = '❌ 发生错误，请刷新页面重试';
-            }
-        });
-
-        // ========== 调试功能 ==========
-        window.debugCoze = function() {
-            console.log('=== Coze调试信息 ===');
-            console.log('1. SDK是否加载:', !!window.CozeWebSDK);
-            console.log('2. SDK版本:', window.CozeWebSDK ? '已加载' : '未加载');
-            console.log('3. 会话信息:', new SessionManager().session);
-            console.log('4. Coze客户端实例:', window.cozeClientInstance);
-            console.log('5. 所有Coze相关元素:', 
-                document.querySelectorAll('[class*="coze"], [class*="Coze"], [id*="coze"], [id*="Coze"]'));
-            console.log('6. iframe数量:', document.querySelectorAll('iframe').length);
-            console.log('=== 调试结束 ===');
-            
-            // 强制检查按钮
-            checkForChatButton();
+        // 配置信息（已填入你的BotID和API令牌，重点检查这里的令牌是否和控制台一致）
+        const CONFIG = {
+            BOT_ID: '7578063729297145899',
+            // 请确认这个令牌和扣子控制台「发布-API调用」里的令牌完全一致，包括大小写和特殊字符
+            API_KEY: 'pat_ZcFFQgalml0fBTb8cpYwFFGAhHtq4NvkzyyCeKDLhkuH1wdCS6ZZ1oa61BqKJeG5',
+            API_URL: 'https://api.coze.com/open_api/v2/chat'
         };
-        
-        // 添加键盘快捷键调试
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-                e.preventDefault();
-                window.debugCoze();
+
+        // 1. 生成/获取唯一会话ID（确保每个用户独立）
+        function getUniqueSessionId() {
+            let sessionId = localStorage.getItem('coze_unique_session_id');
+            if (!sessionId) {
+                sessionId = `test_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+                localStorage.setItem('coze_unique_session_id', sessionId);
             }
-        });
+            document.getElementById('session-id').textContent = sessionId;
+            return sessionId;
+        }
+
+        // 2. 发送消息到扣子智能体（重点修复Authorization请求头格式）
+        async function sendMessage(message) {
+            const sessionId = getUniqueSessionId();
+            const sendBtn = document.getElementById('send-btn');
+            const input = document.getElementById('message-input');
+            const errorTip = document.getElementById('error-tip');
+            
+            sendBtn.disabled = true;
+            input.disabled = true;
+            errorTip.style.display = 'none'; // 隐藏错误提示
+
+            try {
+                // 核心修复点：确保Bearer和令牌之间有且只有一个空格，Authorization字段拼写正确
+                const authHeader = `Bearer ${CONFIG.API_KEY.trim()}`;
+                
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader, // 修复后的授权头
+                        'Accept': 'application/json' // 增加必要的请求头
+                    },
+                    body: JSON.stringify({
+                        bot_id: CONFIG.BOT_ID,
+                        user: sessionId,
+                        query: message,
+                        session_id: sessionId,
+                        stream: false,
+                        temperature: 0.7
+                    })
+                });
+
+                const result = await response.json();
+                
+                // 处理令牌错误，给出明确提示
+                if (result.code === 4101) {
+                    errorTip.style.display = 'block';
+                    return `【令牌错误】${result.msg}
+请检查：
+1. API令牌是否和扣子控制台完全一致；
+2. 令牌是否未过期/未被禁用；
+3. 智能体是否已发布（草稿状态无法调用）。`;
+                }
+
+                if (result.code === 0 && result.data?.answers?.length > 0) {
+                    return result.data.answers[0].content;
+                } else {
+                    return `【接口错误】${result.msg || '未知错误'} (错误码：${result.code})`;
+                }
+            } catch (error) {
+                return `【网络错误】${error.message}`;
+            } finally {
+                sendBtn.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        // 3. 渲染消息到聊天记录
+        function renderMessage(content, isUser = false) {
+            const chatHistory = document.getElementById('chat-history');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            const safeContent = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = `<div class="message-content">${safeContent}</div>`;
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // 4. 绑定页面交互事件
+        function initEventListeners() {
+            const sendBtn = document.getElementById('send-btn');
+            const input = document.getElementById('message-input');
+
+            sendBtn.addEventListener('click', async () => {
+                const message = input.value.trim();
+                if (!message) return;
+                
+                input.value = '';
+                renderMessage(message, true);
+                
+                const aiReply = await sendMessage(message);
+                renderMessage(aiReply, false);
+            });
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendBtn.click();
+                }
+            });
+        }
+
+        // 初始化页面
+        window.onload = () => {
+            getUniqueSessionId();
+            initEventListeners();
+            document.getElementById('message-input').focus();
+        };
     </script>
 </body>
 </html>
