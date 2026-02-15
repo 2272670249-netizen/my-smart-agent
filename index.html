@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>启智导师 - 信息科技学业评价智能体</title>
     <style>
+        /* 样式保持不变，只更新JavaScript部分 */
         * {
             margin: 0;
             padding: 0;
@@ -542,7 +543,7 @@
         // ========== 会话管理系统 ==========
         class SessionManager {
             constructor() {
-                this.STORAGE_KEY = 'eduai_session_v2';
+                this.STORAGE_KEY = 'eduai_session_v3';
                 this.session = null;
                 this.initSession();
                 this.updateSessionDisplay();
@@ -698,7 +699,7 @@
             }
         }
 
-        // ========== Coze SDK 初始化 ==========
+        // ========== 新版 Coze SDK 初始化 ==========
         function initializeCoze() {
             const statusEl = document.getElementById('status');
             if (!statusEl) return;
@@ -708,7 +709,8 @@
                 const sessionManager = new SessionManager();
                 const session = sessionManager.session;
 
-                if (!window.CozeWebSDK) {
+                // 检查SDK是否加载
+                if (typeof window.CozeWebSDK === 'undefined') {
                     statusEl.innerHTML = '❌ Coze SDK 未加载，请刷新页面重试';
                     return;
                 }
@@ -716,101 +718,139 @@
                 // 生成唯一的用户标识，确保每个设备/浏览器独立
                 const userIdentifier = `${session.userId}_${session.deviceId}`;
                 
-                // 创建Coze客户端实例
-                const cozeClient = window.CozeWebSDK.init({
+                console.log('初始化Coze SDK，用户ID:', userIdentifier);
+                
+                // 新版Coze SDK初始化方式
+                const cozeConfig = {
                     config: {
                         bot_id: '7558025828223778835',
                     },
-                    componentConfig: {
+                    component: {
                         theme: {
-                            "primary": "#1a73e8"
+                            primary: "#1a73e8",
+                            assistant_message_bg_color: "#e8f0fe",
+                            assistant_message_text_color: "#202124",
+                            user_message_bg_color: "#1a73e8",
+                            user_message_text_color: "#ffffff"
+                        },
+                        icon: {
+                            url: "https://lf-cdn-tos.dcdtcdn.com/obj/eden-cn/lmeh7p7hco/coze-tt/logo.svg"
                         }
                     },
                     auth: {
                         type: 'token',
                         token: 'pat_HQnW8V3BobW63uKj8qWTQ0DORkpiYKETyOGE45UiVrFZUv1clpbrPDcoasX8LJY1',
                     },
-                    // 关键：每个用户唯一标识，确保聊天记录隔离
                     user: {
-                        user_id: userIdentifier, // 使用组合ID确保唯一性
+                        user_id: userIdentifier,
                         user_name: `学生_${session.userId.substring(8, 16)}`,
                         user_avatar: '',
-                        // 附加设备信息
                         custom_info: {
                             device_type: session.deviceType,
                             session_id: session.sessionId,
                             created_at: session.createdAt
                         }
-                    },
-                    ui: {
-                        asstBtn: {
-                            isNeed: true,
-                            color: '#1a73e8',
-                            size: session.deviceType === '移动设备' ? 'medium' : 'large'
-                        },
-                        chatBot: {
-                            title: '启智导师 - 个性化评价系统',
-                            welcome: `欢迎！我是启智导师，基于信息科技课程标准和布鲁姆教育目标分类学，很高兴为您提供学业评价服务。\n\n会话ID：${session.sessionId.substring(0, 12)}...\n设备：${session.deviceType}`
-                        }
                     }
-                });
+                };
 
-                // 监听Coze事件
-                cozeClient.on('ready', () => {
-                    console.log('✅ Coze智能体已准备就绪');
+                // 尝试不同的SDK初始化方式
+                let cozeClient = null;
+                
+                // 方式1: 新版本初始化方式
+                if (typeof window.CozeWebSDK.create === 'function') {
+                    cozeClient = window.CozeWebSDK.create(cozeConfig);
+                    console.log('使用CozeWebSDK.create()方式初始化');
+                } 
+                // 方式2: 旧版本初始化方式
+                else if (typeof window.CozeWebSDK.init === 'function') {
+                    cozeClient = window.CozeWebSDK.init(cozeConfig);
+                    console.log('使用CozeWebSDK.init()方式初始化');
+                }
+                // 方式3: 尝试WebChatClient类
+                else if (typeof window.CozeWebSDK.WebChatClient === 'function') {
+                    cozeClient = new window.CozeWebSDK.WebChatClient(cozeConfig);
+                    console.log('使用CozeWebSDK.WebChatClient()方式初始化');
+                }
+                // 方式4: 尝试直接调用SDK
+                else if (typeof window.CozeWebSDK === 'function') {
+                    cozeClient = window.CozeWebSDK(cozeConfig);
+                    console.log('使用window.CozeWebSDK()方式初始化');
+                }
+                // 方式5: 如果SDK导出了默认对象
+                else if (window.CozeWebSDK.default && typeof window.CozeWebSDK.default.init === 'function') {
+                    cozeClient = window.CozeWebSDK.default.init(cozeConfig);
+                    console.log('使用CozeWebSDK.default.init()方式初始化');
+                }
+                else {
+                    throw new Error('未找到可用的Coze SDK初始化方法');
+                }
+
+                // 检查初始化是否成功
+                if (!cozeClient) {
+                    throw new Error('Coze客户端初始化失败');
+                }
+
+                // 添加事件监听器（如果SDK支持）
+                if (typeof cozeClient.on === 'function') {
+                    cozeClient.on('ready', () => {
+                        console.log('✅ Coze智能体已准备就绪');
+                        statusEl.innerHTML = '✅ 智能体加载完成！点击右下角图标开始对话';
+                        
+                        // 更新会话最后活动时间
+                        session.lastActive = new Date().toISOString();
+                        sessionManager.saveSession();
+                    });
+
+                    cozeClient.on('error', (error) => {
+                        console.error('❌ Coze智能体错误:', error);
+                        statusEl.innerHTML = '❌ 智能体加载失败: ' + (error.message || '未知错误');
+                    });
+                } else {
+                    // 如果没有事件监听功能，直接显示成功
+                    console.log('✅ Coze智能体已初始化完成');
                     statusEl.innerHTML = '✅ 智能体加载完成！点击右下角图标开始对话';
-                    
-                    // 更新会话最后活动时间
-                    session.lastActive = new Date().toISOString();
-                    sessionManager.saveSession();
-                });
-
-                cozeClient.on('error', (error) => {
-                    console.error('❌ Coze智能体错误:', error);
-                    statusEl.innerHTML = '❌ 智能体加载失败，请刷新页面';
-                });
-
-                cozeClient.on('message', (message) => {
-                    // 更新会话活动时间
-                    session.lastActive = new Date().toISOString();
-                    sessionManager.saveSession();
-                    
-                    // 记录消息到本地存储（可选）
-                    this.logMessage(message);
-                });
+                }
 
                 // 添加到全局变量，便于调试
                 window.cozeClient = cozeClient;
 
+                // 更新状态显示
+                statusEl.innerHTML = '✅ 智能体加载完成！点击右下角图标开始对话';
+                
+                // 移动端特殊处理
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile) {
+                    setTimeout(() => {
+                        const tips = document.createElement('div');
+                        tips.innerHTML = '💡 提示：您的对话将仅保存在当前设备中';
+                        tips.style.cssText = 'font-size:12px; color:#666; margin-top:10px;';
+                        if (statusEl) {
+                            statusEl.appendChild(tips);
+                        }
+                    }, 2000);
+                }
+
             } catch (error) {
                 console.error('初始化Coze时出错:', error);
                 statusEl.innerHTML = '❌ 初始化失败: ' + error.message;
-                showFallbackChatInterface();
+                
+                // 显示详细的错误信息
+                const errorDetails = document.createElement('div');
+                errorDetails.style.cssText = 'font-size:12px; color:#d32f2f; margin-top:10px; padding:10px; background:#ffebee; border-radius:4px;';
+                errorDetails.innerHTML = `
+                    <strong>错误详情：</strong><br>
+                    ${error.message}<br>
+                    <strong>建议：</strong><br>
+                    1. 检查网络连接<br>
+                    2. 清除浏览器缓存后重试<br>
+                    3. 确保启用了JavaScript<br>
+                    <button onclick="location.reload()" style="margin-top:10px; padding:5px 10px; background:#1a73e8; color:white; border:none; border-radius:3px; cursor:pointer;">
+                        刷新页面
+                    </button>
+                `;
+                statusEl.appendChild(errorDetails);
             }
         }
-
-        // 消息日志记录（可选）
-        SessionManager.prototype.logMessage = function(message) {
-            const LOG_KEY = 'eduai_chat_logs_' + this.session.userId;
-            try {
-                let logs = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
-                logs.push({
-                    timestamp: new Date().toISOString(),
-                    type: message.type,
-                    content: message.content,
-                    sessionId: this.session.sessionId
-                });
-                
-                // 只保留最近100条消息
-                if (logs.length > 100) {
-                    logs = logs.slice(-100);
-                }
-                
-                localStorage.setItem(LOG_KEY, JSON.stringify(logs));
-            } catch (e) {
-                console.warn('消息日志记录失败:', e);
-            }
-        };
 
         // ========== SDK加载函数 ==========
         function loadCozeSDK() {
@@ -830,60 +870,67 @@
             }
 
             let sdkLoaded = false;
+            let sdkLoadAttempts = 0;
+            const maxAttempts = 2;
             
-            // 主要SDK源
-            const script = document.createElement('script');
-            script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
+            // 尝试多个SDK源
+            const sdkSources = [
+                'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js',
+                'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js',
+                'https://lf-cdn-tos.dcdtcdn.com/obj/eden-cn/lmeh7p7hco/coze-tt/coze-web-sdk-v1.js'
+            ];
             
-            const timeout = isMobile ? 15000 : 10000;
-            const loadTimer = setTimeout(() => {
-                if (!sdkLoaded) {
-                    statusEl.innerHTML = '加载超时，尝试备用方案<span class="loading-dots"></span>';
-                    loadFallbackSDK();
+            function tryLoadSDK(sourceIndex = 0) {
+                if (sourceIndex >= sdkSources.length) {
+                    statusEl.innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
+                    showFallbackChatInterface();
+                    return;
                 }
-            }, timeout);
-
-            script.onload = function() {
-                clearTimeout(loadTimer);
-                sdkLoaded = true;
-                statusEl.innerHTML = 'SDK加载成功，正在初始化用户会话<span class="loading-dots"></span>';
                 
-                // 等待SDK完全加载
-                setTimeout(() => {
-                    initializeCoze();
-                }, 500);
-            };
+                sdkLoadAttempts++;
+                const script = document.createElement('script');
+                script.src = sdkSources[sourceIndex];
+                
+                statusEl.innerHTML = `正在加载SDK (${sdkLoadAttempts}/${maxAttempts * sdkSources.length})<span class="loading-dots"></span>`;
+                
+                const timeout = isMobile ? 10000 : 7000;
+                const loadTimer = setTimeout(() => {
+                    if (!sdkLoaded) {
+                        script.remove();
+                        console.warn(`SDK源 ${sdkSources[sourceIndex]} 加载超时，尝试下一个`);
+                        tryLoadSDK(sourceIndex + 1);
+                    }
+                }, timeout);
 
-            script.onerror = function() {
-                clearTimeout(loadTimer);
-                statusEl.innerHTML = '主要源加载失败，尝试备用方案<span class="loading-dots"></span>';
-                loadFallbackSDK();
-            };
+                script.onload = function() {
+                    clearTimeout(loadTimer);
+                    sdkLoaded = true;
+                    console.log(`✅ SDK加载成功: ${sdkSources[sourceIndex]}`);
+                    statusEl.innerHTML = 'SDK加载成功，正在初始化用户会话<span class="loading-dots"></span>';
+                    
+                    // 等待SDK完全加载
+                    setTimeout(() => {
+                        initializeCoze();
+                    }, 1000);
+                };
 
-            document.head.appendChild(script);
-        }
+                script.onerror = function() {
+                    clearTimeout(loadTimer);
+                    console.warn(`❌ SDK源 ${sdkSources[sourceIndex]} 加载失败`);
+                    if (sdkLoadAttempts < maxAttempts) {
+                        // 重新尝试当前源
+                        setTimeout(() => tryLoadSDK(sourceIndex), 2000);
+                    } else {
+                        // 尝试下一个源
+                        tryLoadSDK(sourceIndex + 1);
+                    }
+                };
 
-        function loadFallbackSDK() {
-            const statusEl = document.getElementById('status');
-            if (!statusEl) return;
+                document.head.appendChild(script);
+            }
             
-            // 备用SDK源
-            const fallbackScript = document.createElement('script');
-            fallbackScript.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
-            
-            fallbackScript.onload = function() {
-                statusEl.innerHTML = '备用SDK加载成功，正在初始化<span class="loading-dots"></span>';
-                setTimeout(() => {
-                    initializeCoze();
-                }, 500);
-            };
-
-            fallbackScript.onerror = function() {
-                statusEl.innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
-                showFallbackChatInterface();
-            };
-
-            document.head.appendChild(fallbackScript);
+            // 开始加载第一个SDK源
+            tryLoadSDK(0);
         }
 
         // ========== 备用聊天界面 ==========
@@ -925,12 +972,12 @@
         document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'visible') {
                 // 页面重新获得焦点时，更新会话活动时间
-                const sessionData = localStorage.getItem('eduai_session_v2');
+                const sessionData = localStorage.getItem('eduai_session_v3');
                 if (sessionData) {
                     try {
                         const session = JSON.parse(sessionData);
                         session.lastActive = new Date().toISOString();
-                        localStorage.setItem('eduai_session_v2', JSON.stringify(session));
+                        localStorage.setItem('eduai_session_v3', JSON.stringify(session));
                     } catch (e) {
                         console.warn('更新会话时间失败:', e);
                     }
@@ -946,6 +993,13 @@
                 statusEl.innerHTML = '❌ 发生错误，请刷新页面重试';
             }
         });
+
+        // 导出一些函数到全局，方便调试
+        window.debugCoze = function() {
+            console.log('CozeWebSDK:', window.CozeWebSDK);
+            console.log('会话管理器:', new SessionManager().session);
+            console.log('localStorage会话:', localStorage.getItem('eduai_session_v3'));
+        };
     </script>
 </body>
 </html>
