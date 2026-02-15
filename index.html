@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>启智导师 - 信息科技学业评价智能体</title>
     <style>
+        /* 样式部分保持不变，省略以节省篇幅 */
         * {
             margin: 0;
             padding: 0;
@@ -503,35 +504,52 @@
             console.log('📱 移动端访问检测');
         }
 
-        // 生成/获取唯一且持久的用户ID（核心优化点）
+        // 生成/获取唯一且持久的用户ID
         function getUniqueUserId() {
-            // 定义本地存储的key
             const USER_ID_KEY = 'coze_qizhi_tutor_user_id';
             
             try {
-                // 检查localStorage是否可用
                 if (typeof localStorage === 'undefined') {
                     throw new Error('localStorage不可用');
                 }
                 
-                // 从本地存储获取用户ID
                 let userId = localStorage.getItem(USER_ID_KEY);
                 
-                // 如果没有，则生成UUID v4格式的唯一ID
                 if (!userId) {
-                    // 生成UUID v4
-                    userId = 'user_' + ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => 
+                    // 生成更安全的UUID v4
+                    userId = 'user_' + crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => 
                         (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
                     );
-                    // 存入本地存储，永久有效
                     localStorage.setItem(USER_ID_KEY, userId);
                 }
                 
                 return userId;
             } catch (error) {
                 console.warn('本地存储不可用，使用临时唯一ID:', error);
-                // 降级方案：生成基于时间戳+随机数的ID（单次会话有效）
-                return 'temp_user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                return 'temp_user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 12);
+            }
+        }
+
+        // 生成唯一的会话ID（绑定用户ID）
+        function getUniqueConversationId(userId) {
+            const CONV_ID_KEY = `coze_conv_id_${userId}`;
+            
+            try {
+                if (typeof localStorage === 'undefined') {
+                    throw new Error('localStorage不可用');
+                }
+                
+                let convId = localStorage.getItem(CONV_ID_KEY);
+                
+                if (!convId) {
+                    convId = 'conv_' + crypto.randomUUID ? crypto.randomUUID() : Date.now() + '_' + Math.random().toString(36).substr(2, 12);
+                    localStorage.setItem(CONV_ID_KEY, convId);
+                }
+                
+                return convId;
+            } catch (error) {
+                console.warn('本地存储不可用，生成临时会话ID:', error);
+                return 'temp_conv_' + userId + '_' + Date.now();
             }
         }
 
@@ -544,11 +562,10 @@
             
             let sdkLoaded = false;
             
-            // 方法1: 主要SDK源
+            // 使用最新稳定版SDK
             const script = document.createElement('script');
-            script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
+            script.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
             
-            // 移动端设置更长的超时时间
             const timeout = isMobile ? 15000 : 10000;
             const loadTimer = setTimeout(() => {
                 if (!sdkLoaded) {
@@ -578,9 +595,8 @@
             const statusEl = document.getElementById('status');
             if (!statusEl) return;
             
-            // 备用SDK源
             const fallbackScript = document.createElement('script');
-            fallbackScript.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
+            fallbackScript.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/latest/libs/cn/index.js';
             
             fallbackScript.onload = function() {
                 statusEl.innerHTML = '备用SDK加载成功，初始化中<span class="loading-dots"></span>';
@@ -601,24 +617,26 @@
             try {
                 const token = 'pat_HQnW8V3BobW63uKj8qWTQ0DORkpiYKETyOGE45UiVrFZUv1clpbrPDcoasX8LJY1';
                 
-                // 确保CozeWebSDK对象存在
                 if (typeof CozeWebSDK === 'undefined') {
                     statusEl.innerHTML = '❌ SDK未正确加载，请刷新页面重试';
                     return;
                 }
 
-                // 获取唯一用户ID（核心优化）
+                // 1. 获取唯一用户ID
                 const uniqueUserId = getUniqueUserId();
-                console.log('当前用户唯一标识:', uniqueUserId);
+                // 2. 生成绑定用户的唯一会话ID
+                const uniqueConvId = getUniqueConversationId(uniqueUserId);
+                
+                console.log('用户ID:', uniqueUserId);
+                console.log('会话ID:', uniqueConvId);
                 
                 const cozeClient = new CozeWebSDK.WebChatClient({
                     config: {
                         bot_id: '7558025828223778835',
-                        // 额外配置：确保会话隔离
-                        conversation: {
-                            // 强制按用户ID隔离会话
-                            isolation: true
-                        }
+                        // 关键配置：强制会话隔离
+                        conversation_id: uniqueConvId, // 显式指定唯一会话ID
+                        history_msg_count: 0, // 初始化时不加载历史消息（可选）
+                        is_single: true, // 单会话模式
                     },
                     auth: {
                         type: 'token',
@@ -628,9 +646,14 @@
                         }
                     },
                     userInfo: {
-                        // 使用持久化的唯一用户ID（核心修改点）
                         id: uniqueUserId,
-                        nickname: isMobile ? '移动用户_' + uniqueUserId.substr(-6) : '网页用户_' + uniqueUserId.substr(-6)
+                        nickname: isMobile ? `移动用户_${uniqueUserId.substr(-6)}` : `网页用户_${uniqueUserId.substr(-6)}`,
+                        // 额外增加用户标识，强化隔离
+                        avatar: '',
+                        metadata: {
+                            user_type: isMobile ? 'mobile' : 'web',
+                            create_time: new Date().getTime()
+                        }
                     },
                     ui: {
                         asstBtn: {
@@ -640,14 +663,30 @@
                         },
                         chatBot: {
                             title: '启智导师 - 评价智能体',
-                            welcome: '您好！我是启智导师，基于信息科技课程标准和布鲁姆教育目标分类学，很高兴为您提供学业评价服务。'
+                            welcome: '您好！我是启智导师，基于信息科技课程标准和布鲁姆教育目标分类学，很高兴为您提供学业评价服务。',
+                            // 隐藏会话列表，防止用户切换会话
+                            showConversationList: false
                         }
+                    },
+                    // 拦截消息发送，确保携带用户标识
+                    onSendMessage: function(msg) {
+                        return {
+                            ...msg,
+                            metadata: {
+                                user_id: uniqueUserId,
+                                conversation_id: uniqueConvId
+                            }
+                        };
                     }
+                });
+
+                // 监听会话创建事件，确认隔离生效
+                cozeClient.on('conversation_create', function(data) {
+                    console.log('会话创建成功，ID:', data.conversation_id);
                 });
 
                 statusEl.innerHTML = '✅ 智能体加载完成！请点击右下角图标开始对话';
                 
-                // 移动端特殊处理
                 if (isMobile) {
                     setTimeout(() => {
                         const tips = document.createElement('div');
@@ -667,7 +706,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 页面加载完成，开始初始化Coze智能体');
             
-            // 移动端延迟加载，提高成功率
             if (isMobile) {
                 setTimeout(loadCozeSDK, 500);
             } else {
