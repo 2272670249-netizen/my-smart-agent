@@ -3,247 +3,643 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>扣子智能体 - 会话隔离测试</title>
+    <title>启智导师 - 信息科技学业评价智能体</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: "Microsoft YaHei", sans-serif;
         }
-        .chat-wrapper {
-            max-width: 800px;
-            margin: 20px auto;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
         }
-        .chat-header {
-            background-color: #4096ff;
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* 顶部导航栏 */
+        header {
+            background-color: #1a73e8;
             color: white;
-            padding: 15px;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo-area h1 {
+            font-size: 24px;
+            margin-right: 20px;
+        }
+        
+        .logo-area h2 {
             font-size: 18px;
+            font-weight: normal;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        
+        nav li {
+            margin-left: 25px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            padding: 20px 5%;
+            gap: 20px;
+        }
+        
+        /* 左侧信息栏 */
+        .info-panel {
+            width: 28%;
+            min-width: 280px;
+        }
+        
+        .panel-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .panel-section h3 {
+            color: #1a73e8;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-section ul {
+            padding-left: 20px;
+        }
+        
+        .panel-section li {
+            margin-bottom: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        /* 右侧内容区 */
+        .content-area {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .welcome-section {
+            margin-bottom: 20px;
+        }
+        
+        .welcome-section h2 {
+            color: #1a73e8;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-section p {
+            margin-bottom: 15px;
+        }
+        
+        .agent-status {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            border-left-color: #1a73e8;
+            margin: 15px 0;
+        }
+        
+        .agent-status p {
+            margin-bottom: 10px;
+        }
+        
+        .chat-hint {
+            text-align: center;
+            padding: 15px;
+            color: #666;
+            margin-top: auto;
+        }
+        
+        .highlight {
+            color: #1a73e8;
             font-weight: bold;
         }
-        .chat-history {
-            height: 500px;
-            padding: 15px;
-            overflow-y: auto;
-            background-color: #f9f9f9;
-        }
-        .message {
-            margin-bottom: 12px;
-            max-width: 80%;
-            clear: both;
-        }
-        .user-message {
-            float: right;
-        }
-        .ai-message {
-            float: left;
-        }
-        .message-content {
-            padding: 10px 15px;
-            border-radius: 18px;
-            line-height: 1.4;
-        }
-        .user-message .message-content {
-            background-color: #4096ff;
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        .ai-message .message-content {
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            border-bottom-left-radius: 4px;
-        }
-        .chat-input-area {
-            padding: 15px;
-            background-color: white;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 10px;
-        }
-        #message-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 25px;
-            outline: none;
-            font-size: 14px;
-        }
-        #message-input:focus {
-            border-color: #4096ff;
-        }
-        #send-btn {
-            padding: 12px 25px;
-            background-color: #4096ff;
-            color: white;
+        
+        .coze-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #1a73e8;
             border: none;
-            border-radius: 25px;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            text-decoration: none;
+        }
+        
+        .coze-button:hover {
+            background-color: #a9c8f5;
+            transform: scale(1.1);
+        }
+        
+        .coze-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+        }
+
+        /* 移动端提示样式 */
+        .mobile-tips {
+            display: none;
+            background: #fff8e1;
+            border: 1px solid #ffd54f;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
             font-size: 14px;
-            transition: background-color 0.2s;
         }
-        #send-btn:hover {
-            background-color: #337ecc;
+
+        .loading-dots:after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
         }
-        #send-btn:disabled {
-            background-color: #b3d4fc;
-            cursor: not-allowed;
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
         }
-        .session-info {
-            padding: 10px 15px;
-            font-size: 12px;
-            color: #666;
-            background-color: #f5f5f5;
-            border-bottom: 1px solid #e0e0e0;
+
+        #status {
+            font-weight: bold;
+            color: #1a73e8;
         }
-        .error-tip {
-            color: #ff4d4f;
-            font-size: 12px;
-            padding: 5px 15px;
-            background-color: #fff2f0;
-            border-bottom: 1px solid #ffccc7;
+        
+        /* 新增功能卡片区域 */
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        
+        .feature-card p {
+            flex-grow: 1;
+        }
+        
+        /* 系统概览区域 */
+        .system-overview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .overview-item {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .overview-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            color: #1a73e8;
+        }
+        
+        .overview-content h4 {
+            margin-bottom: 5px;
+            color: #1a73e8;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .feature-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .info-panel {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            
+            .panel-section {
+                flex: 1;
+                min-width: 300px;
+            }
+            
+            .content-area {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                padding: 15px 20px;
+            }
+            
+            .logo-area {
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            
+            nav ul {
+                justify-content: center;
+            }
+            
+            nav li {
+                margin: 0 10px;
+            }
+            
+            .main-content {
+                padding: 15px 20px;
+            }
+            
+            .panel-section {
+                min-width: 100%;
+            }
+            
+            .feature-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .system-overview {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="chat-wrapper">
-        <div class="chat-header">扣子智能体 - 会话隔离测试</div>
-        <div class="session-info">当前会话ID：<span id="session-id"></span></div>
-        <div class="error-tip" id="error-tip" style="display: none;">
-            令牌校验失败！请检查API令牌是否正确，或参考<a href="https://coze.com/docs/developer_guides/authentication" target="_blank">扣子认证文档</a>
-        </div>
-        <div class="chat-history" id="chat-history"></div>
-        <div class="chat-input-area">
-            <input type="text" id="message-input" placeholder="请输入你的问题..." autocomplete="off">
-            <button id="send-btn">发送</button>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <h1>启智导师</h1>
+                <h2>信息科技学业评价智能体</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">首页</a></li>
+                    <li><a href="#">课程标准</a></li>
+                    <li><a href="#">评价维度</a></li>
+                    <li><a href="#">使用指南</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="main-content">
+            <div class="info-panel">
+                <div class="panel-section">
+                    <h3>评价维度</h3>
+                    <p>基于课程标准的四大核心素养:</p>
+                    <ul>
+                        <li><span class="highlight">信息意识</span> - 对信息的敏感度与价值判断</li>
+                        <li><span class="highlight">计算思维</span> - 问题抽象、分解、建模能力</li>
+                        <li><span class="highlight">数字化学习与创意表达</span></li>
+                        <li><span class="highlight">信息社会责任</span> - 规范意识与伦理观念</li>
+                    </ul>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>认知层次</h3>
+                    <p>基于布鲁姆教育目标分类学:</p>
+                    <ul>
+                        <li>记忆/理解</li>
+                        <li>应用</li>
+                        <li>分析</li>
+                        <li>评价</li>
+                        <li>创造</li>
+                    </ul>
+                    <p style="margin-top: 10px;">标注的层次为当前重点培养目标</p>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>系统状态</h3>
+                    <p><span class="status-indicator"></span>启智导师评价系统运行正常，已准备为您提供专业评价服务。</p>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div class="welcome-section">
+                    <h2>欢迎使用启智导师评价系统</h2>
+                    <p>基于《义务教育信息科技课程标准》与布鲁姆教育目标分类学，为初中信息科技课程提供专业的学业评价与个性化成长建议。</p>
+                </div>
+                
+                <div class="agent-status">
+                    <p>嵌入式智能体</p>
+                    <p>点击右下角按钮与启智导师智能体对话，获取个性化评价和建议。</p>
+                </div>
+                
+                <!-- 新增系统概览区域 -->
+                <div class="system-overview">
+                    <div class="overview-item">
+                        <div class="overview-icon">📊</div>
+                        <div class="overview-content">
+                            <h4>评价覆盖</h4>
+                            <p>全面覆盖信息科技课程核心素养</p>
+                        </div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-icon">🎯</div>
+                        <div class="overview-content">
+                            <h4>精准分析</h4>
+                            <p>基于布鲁姆教育目标分类学</p>
+                        </div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-icon">📈</div>
+                        <div class="overview-content">
+                            <h4>成长追踪</h4>
+                            <p>记录学生进步轨迹与学习成果</p>
+                        </div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-icon">🤖</div>
+                        <div class="overview-content">
+                            <h4>智能支持</h4>
+                            <p>AI辅助提供个性化学习建议</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 功能卡片区域 -->
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>智能评价</h3>
+                        <p>基于课程标准的多维度评价体系，全面分析学生能力，提供精准的学习评估报告。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>个性化建议</h3>
+                        <p>针对学生特点提供定制化学习路径和改进建议，帮助学生实现个性化成长。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>成长追踪</h3>
+                        <p>记录学生进步轨迹，可视化展示学习成果，帮助教师和家长了解学生发展。</p>
+                    </div>
+                </div>
+                
+                <!-- 移动端提示 -->
+                <div id="mobileTips" class="mobile-tips">
+                    💡 移动端访问提示：如果按钮不显示，请尝试刷新页面或上下滑动
+                </div>
+                
+                <div class="chat-hint">
+                    <p>智能体状态: <span id="status">正在初始化...</span></p>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Coze SDK -->
     <script>
-        // 配置信息（已填入你的BotID和API令牌，重点检查这里的令牌是否和控制台一致）
-        const CONFIG = {
-            BOT_ID: '7578063729297145899',
-            // 请确认这个令牌和扣子控制台「发布-API调用」里的令牌完全一致，包括大小写和特殊字符
-            API_KEY: 'pat_ZcFFQgalml0fBTb8cpYwFFGAhHtq4NvkzyyCeKDLhkuH1wdCS6ZZ1oa61BqKJeG5',
-            API_URL: 'https://api.coze.com/open_api/v2/chat'
-        };
-
-        // 1. 生成/获取唯一会话ID（确保每个用户独立）
-        function getUniqueSessionId() {
-            let sessionId = localStorage.getItem('coze_unique_session_id');
-            if (!sessionId) {
-                sessionId = `test_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-                localStorage.setItem('coze_unique_session_id', sessionId);
+        // 检测移动端
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // 移动端优化配置
+        if (isMobile) {
+            const mobileTips = document.getElementById('mobileTips');
+            if (mobileTips) {
+                mobileTips.style.display = 'block';
             }
-            document.getElementById('session-id').textContent = sessionId;
-            return sessionId;
+            console.log('📱 移动端访问检测');
         }
 
-        // 2. 发送消息到扣子智能体（重点修复Authorization请求头格式）
-        async function sendMessage(message) {
-            const sessionId = getUniqueSessionId();
-            const sendBtn = document.getElementById('send-btn');
-            const input = document.getElementById('message-input');
-            const errorTip = document.getElementById('error-tip');
+        function loadCozeSDK() {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) {
+                console.error('找不到状态元素');
+                return;
+            }
             
-            sendBtn.disabled = true;
-            input.disabled = true;
-            errorTip.style.display = 'none'; // 隐藏错误提示
+            let sdkLoaded = false;
+            
+            // 方法1: 主要SDK源
+            const script = document.createElement('script');
+            script.src = 'https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js';
+            
+            // 移动端设置更长的超时时间
+            const timeout = isMobile ? 15000 : 10000;
+            const loadTimer = setTimeout(() => {
+                if (!sdkLoaded) {
+                    statusEl.innerHTML = '加载超时，尝试备用方案<span class="loading-dots"></span>';
+                    loadFallbackSDK();
+                }
+            }, timeout);
 
+            script.onload = function() {
+                clearTimeout(loadTimer);
+                sdkLoaded = true;
+                statusEl.innerHTML = 'SDK加载成功，初始化中<span class="loading-dots"></span>';
+                initializeCozeBot();
+            };
+
+            script.onerror = function() {
+                clearTimeout(loadTimer);
+                statusEl.innerHTML = '主要源加载失败，尝试备用方案<span class="loading-dots"></span>';
+                loadFallbackSDK();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        function loadFallbackSDK() {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+            
+            // 备用SDK源
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://lf3-cdn-tos.douyinstatic.com/obj/coze-web-sdk/coze-sdk.min.js';
+            
+            fallbackScript.onload = function() {
+                statusEl.innerHTML = '备用SDK加载成功，初始化中<span class="loading-dots"></span>';
+                initializeCozeBot();
+            };
+
+            fallbackScript.onerror = function() {
+                statusEl.innerHTML = '❌ 所有SDK源加载失败，请检查网络连接';
+            };
+
+            document.head.appendChild(fallbackScript);
+        }
+
+        function initializeCozeBot() {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+            
             try {
-                // 核心修复点：确保Bearer和令牌之间有且只有一个空格，Authorization字段拼写正确
-                const authHeader = `Bearer ${CONFIG.API_KEY.trim()}`;
+                const token = 'pat_HQnW8V3BobW63uKj8qWTQ0DORkpiYKETyOGE45UiVrFZUv1clpbrPDcoasX8LJY1';
                 
-                const response = await fetch(CONFIG.API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': authHeader, // 修复后的授权头
-                        'Accept': 'application/json' // 增加必要的请求头
+                // 确保CozeWebSDK对象存在
+                if (typeof CozeWebSDK === 'undefined') {
+                    statusEl.innerHTML = '❌ SDK未正确加载，请刷新页面重试';
+                    return;
+                }
+                
+                const cozeClient = new CozeWebSDK.WebChatClient({
+                    config: {
+                        bot_id: '7558025828223778835',
                     },
-                    body: JSON.stringify({
-                        bot_id: CONFIG.BOT_ID,
-                        user: sessionId,
-                        query: message,
-                        session_id: sessionId,
-                        stream: false,
-                        temperature: 0.7
-                    })
+                    auth: {
+                        type: 'token',
+                        token: token,
+                        onRefreshToken: function() {
+                            return token;
+                        }
+                    },
+                    userInfo: {
+                        id: 'user_' + Math.random().toString(36).substr(2, 9),
+                        nickname: isMobile ? '移动用户' : '网页用户'
+                    },
+                    ui: {
+                        asstBtn: {
+                            isNeed: true,
+                            color: '#1a73e8',
+                            size: isMobile ? 'medium' : 'large'
+                        },
+                        chatBot: {
+                            title: '启智导师 - 评价智能体',
+                            welcome: '您好！我是启智导师，基于信息科技课程标准和布鲁姆教育目标分类学，很高兴为您提供学业评价服务。'
+                        }
+                    }
                 });
 
-                const result = await response.json();
+                statusEl.innerHTML = '✅ 智能体加载完成！请点击右下角图标开始对话';
                 
-                // 处理令牌错误，给出明确提示
-                if (result.code === 4101) {
-                    errorTip.style.display = 'block';
-                    return `【令牌错误】${result.msg}
-请检查：
-1. API令牌是否和扣子控制台完全一致；
-2. 令牌是否未过期/未被禁用；
-3. 智能体是否已发布（草稿状态无法调用）。`;
+                // 移动端特殊处理
+                if (isMobile) {
+                    setTimeout(() => {
+                        const tips = document.createElement('div');
+                        tips.innerHTML = '💡 提示：如果图标不显示，请尝试上下滑动页面';
+                        tips.style.cssText = 'font-size:12px; color:#666; margin-top:10px;';
+                        statusEl.appendChild(tips);
+                    }, 2000);
                 }
 
-                if (result.code === 0 && result.data?.answers?.length > 0) {
-                    return result.data.answers[0].content;
-                } else {
-                    return `【接口错误】${result.msg || '未知错误'} (错误码：${result.code})`;
-                }
             } catch (error) {
-                return `【网络错误】${error.message}`;
-            } finally {
-                sendBtn.disabled = false;
-                input.disabled = false;
-                input.focus();
+                console.error('Coze初始化错误:', error);
+                statusEl.innerHTML = '❌ 初始化失败: ' + error.message;
             }
         }
 
-        // 3. 渲染消息到聊天记录
-        function renderMessage(content, isUser = false) {
-            const chatHistory = document.getElementById('chat-history');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 页面加载完成，开始初始化Coze智能体');
             
-            const safeContent = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-            
-            messageDiv.innerHTML = `<div class="message-content">${safeContent}</div>`;
-            chatHistory.appendChild(messageDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
+            // 移动端延迟加载，提高成功率
+            if (isMobile) {
+                setTimeout(loadCozeSDK, 500);
+            } else {
+                loadCozeSDK();
+            }
+        });
 
-        // 4. 绑定页面交互事件
-        function initEventListeners() {
-            const sendBtn = document.getElementById('send-btn');
-            const input = document.getElementById('message-input');
-
-            sendBtn.addEventListener('click', async () => {
-                const message = input.value.trim();
-                if (!message) return;
-                
-                input.value = '';
-                renderMessage(message, true);
-                
-                const aiReply = await sendMessage(message);
-                renderMessage(aiReply, false);
-            });
-
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendBtn.click();
-                }
-            });
-        }
-
-        // 初始化页面
-        window.onload = () => {
-            getUniqueSessionId();
-            initEventListeners();
-            document.getElementById('message-input').focus();
-        };
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.error);
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.innerHTML = '❌ 发生错误，请刷新页面重试';
+            }
+        });
     </script>
 </body>
 </html>
